@@ -51,7 +51,6 @@ x %>%
 ```{r standardFormat}
 
 df_raw <- do.call(rbind.data.frame, hold$plos)
-
 df <- data.frame(doi=character(),
                  Year=numeric(),
                  Journal=character(),
