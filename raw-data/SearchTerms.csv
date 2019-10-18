@@ -10,6 +10,7 @@ Sequencing,sequel sequencing
 Sequencing,rsii sequencing
 Sequencing,illumina sequencing
 Sequencing,capillary sequencing
+Sequencing,10x sequencing genomics
 Sequencing,10x sequencing genome
 Alignment ,short read
 Alignment ,long read
@@ -31,3 +32,9 @@ Assembly ,hybrid
 Assembly ,single cell 
 Assembly ,scaffold
 Assembly ,polishing 
+Databases,GenBank
+Databases,EMBL
+Databases,DDBJ
+Databases,Gene expression omnibus
+Databases,ENSEMBL
+Databases,RefSeq
