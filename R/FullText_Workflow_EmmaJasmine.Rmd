@@ -1,0 +1,105 @@
+---
+title: "FullText_Workflow"
+author: "Lucia Darrow"
+date: "October 18, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+```
+
+
+```{r libraries}
+# https://github.com/ropensci/fulltext
+library(pubchunks)
+library(pubchunks)
+library(fulltext)
+library(tidyverse)
+library(magrittr)
+library(dplyr)
+library(purrr)
+library(here)
+
+```
+
+```{r webscrape}
+
+# ft_search() - get metadata on a search query.
+#ft_search(query = 'sequence alignment', from = 'crossref', limit = 10)
+
+# ft_links() - get links for articles (xml and pdf).
+seq_align <- c("sequence alignment", "short read", "long read", "spliced read")
+
+term_search <- function(term, lim){
+  # ft_links() - get links for articles (xml and pdf).
+  res1 <- ft_search(query = term, from = c('plos','crossref','arxiv'), limit = lim)
+  mylinks <- ft_links(res1)$plos$ids
+
+  # ft_get() - get full or partial text of articles.
+  x <- ft_get(mylinks)
+
+
+  x %>% ft_collect() %>% 
+    pub_chunks("publisher") %>% 
+    pub_tabularize()
+
+  x %>%
+    ft_collect() %>% 
+    pub_chunks(c("doi", "refDois", "history", "journal_meta", "publisher", "author", "aff", "title", "keywords", "abstract")) %>%  
+    pub_tabularize() -> hold
+  # .$elife
+}
+
+result <- term_search("short read", 10)
+# res1 <- map(seq_align, ~ft_search(query = .x, from = 'plos', limit = 10))
+# 
+# mylinks <- map(res1, ~ft_links(.x)$plos$ids)
+# 
+# # ft_get() - get full or partial text of articles.
+# x <- map(mylinks, ~ft_get(.x))
+# 
+# 
+# x %>% ft_collect() %>% 
+#   pub_chunks("publisher") %>% 
+#   pub_tabularize()
+# 
+# x %>%
+#   ft_collect() %>% 
+#   pub_chunks(c("doi", "refDois", "history", "journal_meta", "publisher", "author", "aff", "title", "keywords", "abstract")) %>%  
+#   pub_tabularize() -> hold
+  # .$elife
+
+```
+
+
+
+```{r standardFormat}
+df_raw <- NULL
+for (nm in names(result)){
+  
+  df_raw <- bind_rows(df_raw, map_df(result[[nm]], `[`))
+  
+  }
+
+df <- data.frame(doi=character(),
+                 refDois=character(),
+                 Year=numeric(),
+                 Journal=character(),
+                 Author=character(),
+                 Institution=character(),
+                 Title=character(),
+                 Keywords=character(),
+                 Abstract=character())
+
+```
+
+```{r save}
+
+write.csv(df_raw, here("/data/YourName-YourTopic.csv"))
+
+```
+
+
