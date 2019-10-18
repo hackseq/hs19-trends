@@ -58,11 +58,6 @@ for(st in searchTerms$Term) {
 write.csv(resFound,file=here("/data/resFound_topic_Databases.csv"),row.names=F)
 ```
 
-```{r plosTes}
-
-```
-
-
 
 
 ```{r}
