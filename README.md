@@ -16,7 +16,10 @@ Lucia Darrow
 Swapna Menon
 
 ## Approach
-1. Webscraping using the package Fulltext package, processing the data in the package pubchunks. We will be looking for: "doi", "refDois", "Year of Publication", "Journal Name", "publisher", "author", "research insitution", "title", "keywords", "abstract". The keywords used for searching determined by terms in the EDAM ontology database and previous knowledge of the field. 
+1. Webscraping using the package Fulltext package, processing the data in the package pubchunks code for this can be found in R>Fulltext_Workflow.Rmd. We will be looking for: "doi", "refDois", "Year of Publication", "Journal Name", "publisher", "author", "research insitution", "title", "keywords", "abstract". 
+  1.1 The keywords used for searching determined by terms in the EDAM ontology database and previous knowledge of the field. 
+  1.2 The keywords have been set up in raw-data>SearchTerms.csv. We are working on optimizing the R>Fulltext_Workflow.Rmd file to loop through this CSV. 
+  1.3 Journals available to us "plos", "bmc", "crossref", "entrez", "arxiv", "biorxiv", "europmc", "scopus", or "ma". 
 2. Visualizing the data with ggplot and other R visualization packages 
 3. Potential data analysis if time permits 
 
