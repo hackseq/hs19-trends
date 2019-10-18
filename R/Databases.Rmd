@@ -62,7 +62,6 @@ All of the above are not necessary. To query publication data PMC and Crossref w
 ```{r webscrape genbank}
 
 databaseList <- ft_search_ls()
-databaseList <- databaseList[!databaseList %in% c("bmc","scopus")]
 
 # ft_links() - get links for articles (xml and pdf).
 resFound <- NULL
