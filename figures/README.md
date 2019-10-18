@@ -1,0 +1,1 @@
+Store figures in this folder
