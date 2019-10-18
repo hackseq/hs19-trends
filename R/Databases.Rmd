@@ -42,7 +42,7 @@ searchTerms <- searchTerms %>% filter(Topic=="Databases")
 ###The format of ENTREZ data output is not compatible with downstream analyses. 
 
 ###Microsoft academic search 
-APU key = yes (requires an Asure account and a credit card).Not used. 
+API key = yes (requires an Asure account and a credit card).Not used. 
 Rate limit: 10,000 per month, 1 per second
 
 ###Scopus 
