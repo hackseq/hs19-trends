@@ -1,4 +1,4 @@
-# History files
+#History files
 .Rhistory
 .Rapp.history
 
@@ -35,3 +35,6 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 .Rproj.user
+
+# DS Store
+Python/.DS_Store 

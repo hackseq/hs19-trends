@@ -33,6 +33,10 @@ These are the R Packages needed:
 * `purrr`
 * `here`
 
+These are the Python (`python3`) packages needed:
+* `googlemaps`
+* `pandas`
+
 ## Usage
 In the R folder, go to [`FullText_Workflow.Rmd`](https://github.com/hackseq/hs19-trends/blob/master/R/FullText_Workflow.Rmd) for template and use [`raw-data/journals.csv`](https://github.com/hackseq/hs19-trends/blob/master/raw-data/journals.csv) for list of journals to be searched. Data output can be found in the data folder. 
 
