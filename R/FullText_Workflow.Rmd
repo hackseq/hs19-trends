@@ -1,0 +1,66 @@
+---
+title: "FullText_Workflow"
+author: "Lucia Darrow"
+date: "October 18, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+```
+
+
+```{r libraries}
+# https://github.com/ropensci/fulltext
+library(fulltext)
+library(pubchunks)
+library(tidyverse)
+library(magrittr)
+
+```
+
+```{r webscrape}
+
+# ft_search() - get metadata on a search query.
+ft_search(query = 'sequence alignment', from = 'crossref', limit = 10)
+
+# ft_links() - get links for articles (xml and pdf).
+res1 <- ft_search(query = 'genomics', from = 'plos', limit = 10)
+mylinks <- ft_links(res1)$plos$ids
+
+# ft_get() - get full or partial text of articles.
+x <- ft_get(mylinks)
+
+library(pubchunks)
+
+x %>% ft_collect() %>% 
+  pub_chunks("publisher") %>% 
+  pub_tabularize()
+
+x %>%
+  ft_collect() %>% 
+  pub_chunks(c("abstract", "doi", "history")) %>%
+  pub_tabularize() -> hold
+  # .$elife
+
+```
+
+
+
+```{r standardFormat}
+
+df <- data.frame(doi=character(),
+                 Year=numeric(),
+                 Journal=character(),
+                 Author=character(),
+                 Institution=character(),
+                 Title=character(),
+                 Keywords=character(),
+                 Abstract=character())
+
+```
+
+
+
