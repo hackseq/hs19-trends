@@ -68,5 +68,10 @@ df <- data.frame(doi=character(),
 
 ```
 
+```{r save}
+
+write.csv(df_raw, "./data/YourName-YourTopic.csv")
+
+```
 
 
