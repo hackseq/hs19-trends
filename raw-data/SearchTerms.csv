@@ -38,3 +38,11 @@ Databases,DDBJ
 Databases,Gene expression omnibus
 Databases,ENSEMBL
 Databases,RefSeq
+Annotation, functional annotation
+Annotation, genome annotation
+Annotation, functional genome annotation
+Annotation, gene model
+Annotation, gene prediction
+Gene Expression, transcript quantification
+Gene Expression, differential expression
+Gene Expression, transcript abundance
