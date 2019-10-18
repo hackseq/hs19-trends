@@ -11,3 +11,9 @@ Sequencing,rsii sequencing
 Sequencing,illumina sequencing
 Sequencing,capillary sequencing
 Sequencing,10x sequencing genome
+Databases,GenBank
+Databases,EMBL
+Databases,DDBJ
+Databases,Gene expression omnibus
+Databases,ENSEMBL
+Databases,RefSeq

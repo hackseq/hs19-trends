@@ -29,25 +29,43 @@ Sys.setenv(ELSEVIER_SCOPUS_KEY = '3da3a9477a6e0a7fefc0bbfb49f288f5', SPRINGER_KE
 
 ```
 
-```{r webscrape genbank}
+```{r import}
+
+searchTerms <- read.csv(here("/raw-data/SearchTerms.csv"))
+searchTerms$Term %<>% as.character()
+searchTerms  <- searchTerms%>% filter(Topic == "Databases")
+```
+
+```{r searchTerms}
 
 databaseList <- ft_search_ls()
-databaseList <- databaseList[!databaseList %in% c("bmc","scopus")]
 
 # ft_links() - get links for articles (xml and pdf).
 resFound <- NULL
 
-st <- "Genbank"
-st <- "bioinformatics databases"
-res1 <- ft_search(query = st, from = 'scopus', limit = 10)
-
-for(nm in names(res1)){
-  Found <- res1[[nm]][["found"]]
-  if(!is.null(Found)){
-  resFound <- bind_rows(resFound,data.frame(db=nm,found=Found,searchTerm=st))}
+for(st in searchTerms$Term) {
+  
+  res1 <- ft_search(query = st, from = databaseList, limit = 10)
+  
+  for(nm in names(res1)){
+    Found <- res1[[nm]][["found"]]
+    if(!is.null(Found)){
+      resFound <- bind_rows(resFound,data.frame(db=nm,found=Found,searchTerm=st))}
+  }
+  
 }
 
+write.csv(resFound,file=here("/data/resFound_topic_Databases.csv"),row.names=F)
+```
 
+```{r plosTes}
+
+```
+
+
+
+
+```{r}
 mylinks <- ft_links(res1)$plos$ids
 
 # ft_get() - get full or partial text of articles.
