@@ -33,7 +33,7 @@ Sys.setenv(ELSEVIER_SCOPUS_KEY = '3da3a9477a6e0a7fefc0bbfb49f288f5', SPRINGER_KE
 ###The format of ENTREZ data output is not compatible with downstream analyses. 
 
 ###Microsoft academic search 
-APU key = yes (requires an Asure account and a credit card).Not used. 
+API key = yes (requires an Asure account and a credit card).Not used. 
 Rate limit: 10,000 per month, 1 per second
 
 ###Scopus 
