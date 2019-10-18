@@ -1,0 +1,93 @@
+---
+title: "Databases Webscraping"
+author: "Raissa Philibert"
+date: "October 18, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+```
+
+
+```{r libraries}
+# https://github.com/ropensci/fulltext
+library(fulltext)
+library(pubchunks)
+library(tidyverse)
+library(magrittr)
+library(dplyr)
+library(purrr)
+library(here)
+
+```
+
+```{r webscrape genbank}
+
+databaseList <- ft_search_ls()
+databaseList <- databaseList[!databaseList %in% c("bmc","scopus")]
+
+# ft_links() - get links for articles (xml and pdf).
+resFound <- NULL
+
+st <- "Genbank"
+st <- "bioinformatics databases"
+res1 <- ft_search(query = st, from = databaseList, limit = 10)
+
+for(nm in names(res1)){
+  Found <- res1[[nm]][["found"]]
+  if(!is.null(Found)){
+  resFound <- bind_rows(resFound,data.frame(db=nm,found=Found,searchTerm=st))}
+}
+
+
+mylinks <- ft_links(res1)$plos$ids
+
+# ft_get() - get full or partial text of articles.
+x <- ft_get(mylinks)
+
+
+x %>% ft_collect() %>% 
+  pub_chunks("publisher") %>% 
+  pub_tabularize()
+
+x %>%
+  ft_collect() %>% 
+  pub_chunks(c("doi", "refDois", "history", "journal_meta", "publisher", "author", "aff", "title", "keywords", "abstract")) %>%  
+  pub_tabularize() -> hold
+  # .$elife
+
+```
+
+
+
+```{r standardFormat}
+
+df_raw <- NULL
+for (nm in names(hold)){
+  
+  df_raw <- bind_rows(df_raw, map_df(hold[[nm]], `[`))
+  
+  }
+
+df <- data.frame(doi=character(),
+                 refDois=character(),
+                 Year=numeric(),
+                 Journal=character(),
+                 Author=character(),
+                 Institution=character(),
+                 Title=character(),
+                 Keywords=character(),
+                 Abstract=character())
+
+```
+
+```{r save}
+
+write.csv(df_raw, here("/data/YourName-YourTopic.csv"))
+
+```
+
+
