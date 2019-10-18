@@ -21,13 +21,22 @@ library(magrittr)
 library(dplyr)
 library(purrr)
 library(here)
-
+###custom functions
+source(here("./R/getDOI.R"))
 ```
 
 ```{r API keys}
 Sys.setenv(ELSEVIER_SCOPUS_KEY = '3da3a9477a6e0a7fefc0bbfb49f288f5', SPRINGER_KEY = 'dc293398c185c33d930865ae1fd6eae3', ENTREZ_KEY = "1621b309cd4dab23f28c432d4e7baa76d909" )
 
 ```
+
+```{r import}
+
+searchTerms <- read.csv(here("/raw-data/SearchTerms.csv"))
+searchTerms$Term %<>% as.character()
+searchTerms <- searchTerms %>% filter(Topic=="Databases")
+```
+
 
 ##Selecting relevant databases for fulltext 
 ###The format of ENTREZ data output is not compatible with downstream analyses. 
@@ -66,17 +75,36 @@ databaseList <- ft_search_ls()
 # ft_links() - get links for articles (xml and pdf).
 resFound <- NULL
 
-st <- "Genbank"
-st <- "bioinformatics databases"
-res1 <- ft_search(query = st, from = 'scopus', limit = 10)
-
-for(nm in names(res1)){
-  Found <- res1[[nm]][["found"]]
-  if(!is.null(Found)){
-  resFound <- bind_rows(resFound,data.frame(db=nm,found=Found,searchTerm=st))}
+for(st in searchTerms$Term) {
+  
+  res1 <- ft_search(query = st, from = databaseList, limit = 10)
+  
+  for(nm in names(res1)){
+    Found <- res1[[nm]][["found"]]
+    if(!is.null(Found)){
+      resFound <- bind_rows(resFound,data.frame(db=nm,found=Found,searchTerm=st))}
+  }
+  
 }
 
+```
 
+We will be getting DOIs from plos, crossref and bmc
+```{r getDOI}
+plosLinks <- res1$plos$ids
+limit = max(resFound[resFound$db %in% c("bmc","crossref"),"found"])
+res1$crossref$data %>% View()
+```
+
+```{r crossref}
+offsets <- seq(1,limit,1000)
+st <- "Gene expression omnibus"
+crossref <- purrr::map_df(offsets,function(x) crossrefsearch(x,st=st))
+
+save(crossref,file=here("/data/crossref_geo_results.Rda"))
+```
+
+```{r getLinks}
 mylinks <- ft_links(res1)$plos$ids
 
 # ft_get() - get full or partial text of articles.
