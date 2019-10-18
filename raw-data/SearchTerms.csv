@@ -12,6 +12,26 @@ Sequencing,illumina sequencing
 Sequencing,capillary sequencing
 Sequencing,10x sequencing genomics
 Sequencing,10x sequencing genome
+Alignment ,short read
+Alignment ,long read
+Alignment ,spliced
+Alignment ,gapped 
+Alignment ,multiple sequence 
+Alignment ,pairwise 
+Alignment ,global 
+Aignment ,local 
+Variant Calling ,CNV
+Variant Calling ,SNV
+Variant Calling ,SNP
+Variant Calling ,STR
+Variant Calling ,Tandem Repeat
+Assembly ,short read
+Assembly ,long read 
+Assembly ,linked 
+Assembly ,hybrid 
+Assembly ,single cell 
+Assembly ,scaffold
+Assembly ,polishing 
 Databases,GenBank
 Databases,EMBL
 Databases,DDBJ

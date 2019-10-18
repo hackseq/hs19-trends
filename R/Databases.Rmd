@@ -29,38 +29,54 @@ Sys.setenv(ELSEVIER_SCOPUS_KEY = '3da3a9477a6e0a7fefc0bbfb49f288f5', SPRINGER_KE
 
 ```
 
-```{r import}
+##Selecting relevant databases for fulltext 
+###The format of ENTREZ data output is not compatible with downstream analyses. 
 
-searchTerms <- read.csv(here("/raw-data/SearchTerms.csv"))
-searchTerms$Term %<>% as.character()
-searchTerms  <- searchTerms%>% filter(Topic == "Databases")
-```
+###Microsoft academic search 
+APU key = yes (requires an Asure account and a credit card).Not used. 
+Rate limit: 10,000 per month, 1 per second
 
-```{r searchTerms}
+###Scopus 
+API key= yes
+lim = 20,000 (default 25)
+Boolean syntax (AND, OR, AND NOT)
+Scopus_loop function
+date = year of publication
+
+###Euro PMC
+lim = NA (default 25)
+pubYear = year of publication
+
+
+###BioRxiv
+only records with CrossRef are retained
+lim = NA (default 10)
+deposited = yyyy-mm-dd date of deposit
+
+###aRxiv
+lim = NA (default:10)
+
+All of the above are not necessary. To query publication data PMC and Crossref would be sufficicent, and still contain redundencies.  
+
+
+```{r webscrape genbank}
 
 databaseList <- ft_search_ls()
 
 # ft_links() - get links for articles (xml and pdf).
 resFound <- NULL
 
-for(st in searchTerms$Term) {
-  
-  res1 <- ft_search(query = st, from = databaseList, limit = 10)
-  
-  for(nm in names(res1)){
-    Found <- res1[[nm]][["found"]]
-    if(!is.null(Found)){
-      resFound <- bind_rows(resFound,data.frame(db=nm,found=Found,searchTerm=st))}
-  }
-  
+st <- "Genbank"
+st <- "bioinformatics databases"
+res1 <- ft_search(query = st, from = 'scopus', limit = 10)
+
+for(nm in names(res1)){
+  Found <- res1[[nm]][["found"]]
+  if(!is.null(Found)){
+  resFound <- bind_rows(resFound,data.frame(db=nm,found=Found,searchTerm=st))}
 }
 
-write.csv(resFound,file=here("/data/resFound_topic_Databases.csv"),row.names=F)
-```
 
-
-
-```{r}
 mylinks <- ft_links(res1)$plos$ids
 
 # ft_get() - get full or partial text of articles.
