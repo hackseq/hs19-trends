@@ -18,6 +18,9 @@ library(fulltext)
 library(pubchunks)
 library(tidyverse)
 library(magrittr)
+library(dplyr)
+library(purrr)
+library(here)
 
 ```
 
