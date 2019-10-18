@@ -1,0 +1,221 @@
+---
+title: "R Tutorial"
+author: "RLadies Vancouver"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+# In the setup chunk we set some global chunk options to apply to the rest of the document
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+```
+
+
+```{r libraries, warning = FALSE, echo=FALSE, message = FALSE}
+
+# Loading the tidyverse package loads the following set of packages:
+# # ggplot2, for data visualisation.
+# # dplyr, for data manipulation.
+# # tidyr, for data tidying.
+# # readr, for data import.
+# # purrr, for functional programming.
+# # tibble, for tibbles, a modern re-imagining of data frames.
+# # stringr, for strings.
+# # forcats, for factors.
+library(tidyverse)
+
+# magrittr: set of operators to support R workflow
+library(magrittr)
+
+# purrr: functional programming toolkit
+library(purrr)
+
+# plotly: create interactive graphics
+library(plotly)
+
+```
+
+## Inspecting Data
+```{r inspect}
+
+# View structure of the built-in mtcars dataset
+str(mtcars)
+
+# View summary statistics of the mtcars dataset
+summary(mtcars)
+
+# View the first 6 elements of the mtcars dataset
+head(mtcars)
+
+# If you have questions about any of these functions, use the ? to access help pages
+# ?str
+
+```
+
+
+## Subsetting Data
+```{r subset}
+
+# Column operations
+# Select mpg, cyl, hp columns and save to the cars object
+cars <- mtcars[, c(1:2, 4)]
+
+# Alternatively, we can use column names to acheive this
+cars <- mtcars[, c("mpg", "cyl", "hp")]
+
+# Another option is use the select function from the dplyr package (more on this below)
+cars <- select(mtcars, mpg, cyl, hp)
+
+# Accessing columns with the $ extact operator
+# Create a vector, hp, with just the horsepower column
+hp <- mtcars$hp
+
+# Return the car with the lowest horsepower
+min(cars$hp)
+
+# Create a set of cars that have a horsepower of less than 65
+low_hp <- cars[cars$hp <= 65, ]
+
+# Alternatively, we can use the filter function from the dplyr package (more on this below)
+# Note, there are multiple packages containing a function called "filter", here we specify the dplyr package as the source of our filter fucntion with the double colon :: operator
+low_hp <- dplyr::filter(cars, hp <= 65)
+```
+
+
+## Magrittr Operator
+```{r magrittr}
+
+# Standard format: nested functions
+# h(g(f(x)))
+
+# Magrittr format: read left to right
+# x %<>% f() %>%
+  # g() %>%
+  # h()
+
+# The pipe operator %>%
+headCars <- head(cars)
+headCars <- cars %>% head()
+
+# The assignment pipe %<>%
+headCars$cyl %<>% as.integer()
+
+# The %in% operator 
+x <- c("one", "seven", "two")
+x %in% c("one", "two", "three")
+
+```
+
+## Typecasting
+```{r}
+x <- 3
+str(x)
+
+# Set the type to integer
+x %<>% as.integer()
+str(x)
+
+# Understanding type: factor
+# Set the type to factor
+x <- 3
+x %<>% as.factor()
+
+# Let's return to numeric type-- what goes wrong?
+x %<>% as.numeric()
+str(x)
+
+# Instead let's convert to character, then numeric
+x <- 3
+x %<>% as.factor() %>%
+  as.character() %>%
+  as.numeric()
+
+```
+
+## Import/ Export CSV
+```{r csv}
+
+# Methods to read and write to csv from base R
+write.csv(mtcars, "CarsTest.csv")
+cars <- read.csv("CarsTest.csv")
+
+```
+
+## Plotting
+```{r plots}
+# Explore the built-in iris dataset
+head(iris)
+
+# Create a simple R plot with the iris dataset
+plot(iris$Petal.Width, iris$Sepal.Width)
+
+# Explore differences among flower species using ggplot from the ggplot2 package
+ggplot(data = iris, aes(x = Petal.Width, y = Sepal.Width)) +
+  geom_point(aes(color = Species, shape = Species))
+
+# Add some labels
+p1 <- ggplot(data = iris, aes(x = Petal.Width, y = Sepal.Width)) +
+  geom_point(aes(color = Species, shape = Species)) +
+  scale_color_viridis_d() +
+  ggtitle("Comparing Petal and Sepal Width of Iris Flower Species") +
+  xlab("Petal Width") +
+  ylab("Sepal Width") +
+  labs(fill='Species') 
+
+# Plot p1
+p1
+
+# We can easily convert this ggplot output into an interactive plotly display with the ggplotly() function
+ggplotly(p1)
+
+
+```
+
+
+## Tidyverse
+```{r}
+
+# Here's a sample workflow using tidyverse functions:
+# # Pull out cars that are four cylinder
+# # Create a column that views mpg in kilometers per liter
+# # Sort the data by kpl
+mtcars %>% filter(cyl == 4) %>%
+  mutate(kpl = 0.425*mpg) %>%
+  arrange(desc(kpl))
+
+# Another sample workflow:
+# # Group data by gear and apply summary statistics
+mtcars %>%
+  group_by(gear) %>%
+  summarize(medianHorsePower = median(hp),
+            maxMPG = max(mpg))
+
+# Check out ?gather and ?spread for help reshaping data
+
+```
+
+## Apply Functions
+```{r}
+
+# Apply the mean function to the mtcars dataset
+# The second parameter refers to rows (1) or columns (2)
+apply(mtcars, 2, mean)
+
+# Check out ?sapply, ?lapply, etc for more specific apply functionality
+
+```
+
+## Write your own functions
+```{r}
+
+# Create a simple function that adds input y to x
+myfun <- function(x, y=1) {
+  x+y
+}
+
+myfun(3)
+
+# Specify the y parameter and view the result
+myfun(3, 2)
+```
