@@ -20,14 +20,14 @@ library(tidyverse)
 library(magrittr)
 library(dplyr)
 library(purrr)
-library(here)
 library(lubridate)
+library(here)
 
 ```
 
 ```{r import}
 
-searchTerms <- read.csv(here("/raw-data/SearchTerms.csv"))
+searchTerms <- read.csv(here::here("raw-data","SearchTerms.csv"))
 searchTerms$Term %<>% as.character()
 searchTerm = 'sequence alignment'
 ```
@@ -108,7 +108,7 @@ df <- data.frame(doi=character(),
 
 ```{r save}
 
-write.csv(df_raw, here("/data/YourName-YourTopic.csv"))
+write.csv(df_raw, here::here("data","YourName-YourTopic.csv"))
 
 ```
 
