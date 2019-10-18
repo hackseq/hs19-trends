@@ -33,7 +33,6 @@ mylinks <- ft_links(res1)$plos$ids
 # ft_get() - get full or partial text of articles.
 x <- ft_get(mylinks)
 
-library(pubchunks)
 
 x %>% ft_collect() %>% 
   pub_chunks("publisher") %>% 
@@ -50,6 +49,8 @@ x %>%
 
 
 ```{r standardFormat}
+
+df_raw <- do.call(rbind.data.frame, hold$plos)
 
 df <- data.frame(doi=character(),
                  Year=numeric(),
