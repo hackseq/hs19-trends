@@ -20,7 +20,7 @@ Graphic Visualization of trends in Bioinformatics
 1. Webscraping using the package Fulltext package, processing the data in the package pubchunks code for this can be found in [`R/Fulltext_Workflow.Rmd`](https://github.com/hackseq/hs19-trends/blob/master/R/FullText_Workflow.Rmd). We will be looking for: `doi`, `refDois`, `Year of Publication`, `Journal Name`, `publisher`, `author`, `research insitution`, `title`, `keywords`, `abstract`. 
     * The keywords used for searching determined by terms in the EDAM ontology database and previous knowledge of the field. 
     * The keywords have been set up in [`raw-data/SearchTerms.csv`](https://github.com/hackseq/hs19-trends/blob/master/raw-data/SearchTerms.csv). We are working on optimizing the [`R/Fulltext_Workflow.Rmd`](https://github.com/hackseq/hs19-trends/blob/master/R/FullText_Workflow.Rmd) file to loop through this CSV. 
-    * Journals available to us `plos`, `bmc`, `crossref`, `entrez`, `arxiv`, `biorxiv`, `europmc`, `scopus`, or `ma`. 
+    * Journals available to us `plos` 
 1. Visualizing the data with ggplot and other R visualization packages 
 1. Potential data analysis if time permits 
 
@@ -33,6 +33,8 @@ These are the R Packages needed:
 * `dplyr`
 * `purrr`
 * `here`
+* `future`
+* `lubridate`
 
 These are the Python (`python3`) packages needed:
 * `googlemaps`
