@@ -38,3 +38,7 @@ vignettes/*.pdf
 
 # DS Store
 Python/.DS_Store 
+*/.DS_Store
+
+# Rproj
+hackseq192.Rproj

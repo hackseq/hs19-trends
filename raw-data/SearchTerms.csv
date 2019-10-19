@@ -1,72 +1,32 @@
 Topic,Term
 Sequencing,sanger sequencing
-Sequencing,oxford nanopore sequencing
-Sequencing,ont reads sequencing
-Sequencing,pacbio sequencing
-Sequencing,illumina sequencing
-Sequencing,capillary sequencing
-Sequencing,10x sequencing genomics
+Sequencing,long read sequencing
 Sequencing, NGS
-Sequencing, next-generation sequencing
-Sequencing, third-generation sequencing
-Sequence Alignment, sequence alignment
-Sequence Alignment ,short read alignment
-Sequence Alignment ,long read alignment
-Sequence Alignment ,spliced alignment
-Sequence Alignment ,gapped alignment
-Sequence Alignment ,multiple sequence alignment
-Sequence Alignment, MSA
-Sequence Alignment ,pairwise alignment
+Sequence Alignment ,read alignment
 Sequence Alignment ,global alignment
 Sequence Alignment ,local alignment
 Variant Calling ,CNV
-Variant Calling ,SNV
 Variant Calling ,SNP
-Variant Calling ,STR
 Variant Calling ,Tandem Repeat
 Assembly ,short read assembly
 Assembly ,long read assembly
-Assembly ,linked read assembly
 Assembly ,hybrid assembly
-Assembly ,single cell assembly
-Assembly ,scaffolding
-Assembly ,polishing 
 Databases,GenBank
 Databases,EMBL
 Databases,DDBJ
-Databases,Gene expression omnibus
-Databases,ENSEMBL
-Databases,RefSeq
 Genome Annotation, annotation pipeline
-Genome Annotation, functional annotation
-Genome Annotation, genome annotation
 Genome Annotation, functional genome annotation
-Genome Annotation, gene model
 Genome Annotation, gene prediction
 Gene Expression, transcript quantification
 Gene Expression, differential expression
-Gene Expression, transcript abundancea
 Gene Expression, gene expression
 Phylogenetics, phylogenetics
 Phylogenetics, evolutionary genetics
 Phylogenetics, evolution genetics
 Structural Prediction, secondary structure prediction
 Structural Prediction, tertiary structure prediction
-Structural Prediction, 3D structure prediction
 Structural Prediction, structural prediction
-Epigenetics, epigenetics
-Epigenetics, chip-seq
-Epigenetics, heterochromatin
-Epigenetics, euchromatin
-Epigenetics, post-transcriptional regulation
-Epigenetics, gene enhancer regulation
-Epigenetics, gene silencer regulation
-Metagenomics,	metagenomics
-Metagenomics,	microbiome
-Metagenomics,	microbiota
-Metagenomics, metagenomic 
-Metagenomics,	shotgun metagenomic sequencing
-Metagenomics, multiple sample visualization
-Metagenomics, species frequency estimation
-Metagenomics, read binning
-Metagenomics, metagenome
+Epigenetics,epigenetics bioinformatics
+Metagenomics,"	metagenomics"
+Metagenomics,"	microbiome"
+Metagenomics,"	shotgun metagenomic sequencing"
