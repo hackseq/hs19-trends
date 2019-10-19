@@ -4,7 +4,7 @@ Sequencing,long read sequencing
 Sequencing, NGS
 Sequence Alignment ,read alignment
 Sequence Alignment ,global alignment
-Sequence Alignment ,local alignment
+Sequence Alignment ,local sequence alignment
 Variant Calling ,CNV
 Variant Calling ,SNP
 Variant Calling ,Tandem Repeat
