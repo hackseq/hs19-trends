@@ -43,7 +43,7 @@ for(st in searchTerms$Term[1]) {
 
 
 # Create simplified DF for analysis
-df_raw_refined <- df_raw[, which(colSums(is.na(df_raw)) < 200)]
+df_raw_refined <- df_raw[, which(colSums(is.na(df_raw)) <  0.2*nrow(df_raw))]
 df_raw_refined %<>% select(-c("history.received", "journal_meta.journal.id", "journal_meta.journal.id.1", "journal_meta.journal.id.2", "journal_meta.issn", "journal_meta.publisher", ".publisher" )) %>%
   unite(col = author1, c(authors.surname, authors.given_names), sep = ", ") %>%
   mutate(Year = year(history.accepted), history.accepted = NULL) %>%
