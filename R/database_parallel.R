@@ -12,14 +12,14 @@ library(lubridate)
 here <- here::here
 plan(multisession)
 
-searchTerms <- read.csv(here("/raw-data/SearchTerms.csv"))
+searchTerms <- read_csv(here("/raw-data/SearchTerms.csv"))
 searchTerms$Term %<>% as.character()
 searchTerms <- searchTerms %>% filter(Topic=="Databases")
-topics <- unique(searchTerms$Topic)
+
 # ft_links() - get links for articles (xml and pdf).
 df_raw <- NULL
 
-for(st in topics) {
+for(st in searchTerms$Term[1]) {
 
   res1 <- ft_search(query = st, from = "plos", limit = 1000)
   
@@ -54,4 +54,4 @@ df_raw_refined %<>% select(-c("history.received", "journal_meta.journal.id", "jo
   select(-starts_with("aff.")) %>%
   distinct()
 
-write.csv(df_raw_refined, here::here("data","Raissa-test.csv"))
+write_csv(df_raw_refined, here::here("data","Raissa-test.csv"))
