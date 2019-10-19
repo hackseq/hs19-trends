@@ -45,3 +45,23 @@ df_all_uni %>%
 ggplotly()
 
 
+df_all_uni %>% 
+  group_by(topic, Year) %>% 
+  summarise(total = n()) %>% 
+  ggplot(aes(x = Year, y = total, colour = topic)) +
+  geom_line() +
+  facet_wrap(~ topic)
+
+ggplotly()
+
+# comparing specific search terms
+df_all_uni %>% 
+  filter(grepl("sequence", topic)) %>% 
+  ggplot(aes(x = Year, y = total, colour = topic)) +
+  geom_line()
+
+seq <- df_all_uni %>% 
+  filter(grepl("assembly", topic)) %>% 
+  ggplot(aes(x = Year, y = total, colour = topic)) +
+  geom_line() +
+  facet_wrap(~ topic)
