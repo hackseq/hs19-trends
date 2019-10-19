@@ -25,10 +25,6 @@ library(here)
 source(here("./R/getDOI.R"))
 ```
 
-```{r API keys}
-Sys.setenv(ELSEVIER_SCOPUS_KEY = '3da3a9477a6e0a7fefc0bbfb49f288f5', SPRINGER_KEY = 'dc293398c185c33d930865ae1fd6eae3', ENTREZ_KEY = "1621b309cd4dab23f28c432d4e7baa76d909" )
-
-```
 
 ```{r import}
 
