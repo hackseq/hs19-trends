@@ -17,6 +17,8 @@ library(rgeos)
 library(maptools)
 library(maps)
 library(sf)
+library(readr)
+select <- dplyr::select
 ```
 
 ## Make a bubble map with ggplot and plotly
@@ -25,30 +27,29 @@ library(sf)
 ```{r readData}
 
 data <- read_csv(here("data","affiliations_lat_long.csv"))
-data <- data %>% select(-X1) %>% distinct() %>%
+data <- data %>% 
+       select(-X1) %>% distinct() %>%
         drop_na()
+# Convert to simple feature object
+point_sf <- st_as_sf(data, coords = c("long", "lat"), crs = 4326)
 
 ```
 
-## Bubble plots
 
-```{r pressure, echo=FALSE}
+```{r basicworldmap, echo=FALSE}
 # Libraries
 
-# Get the world polygon and extract UK
-library(maps)
 world <- map_data("world") 
 world
 ```
-```{r}
+
+```{r testDensityPlot}
 ggplot()+
   geom_polygon(data=world,aes(x=long, y=lat,group=group),fill="grey",alpha=0.3)+
   stat_density2d(data=data,aes(x=long,y=lat,fill=..level..),geom="polygon",size=25)
   
 ```
-```{r}
-# Convert to simple feature object
-point_sf <- st_as_sf(data, coords = c("long", "lat"), crs = 4326)
+```{r worldmapdatamanipulation}
 
 # Get world map data
 worldmap <- maps::map("world", fill = TRUE, plot = FALSE)
@@ -85,15 +86,100 @@ world_data <- map_data("world")
 world_data2 <- world_data %>%
   left_join(world_df, by = c("region"))
 ```
-```{r}
-ggplot() + 
+
+```{r worldmap}
+pl <- ggplot() + 
   geom_polygon(data = world_data2, aes(x = long, y = lat, group = group, fill = Count)) +
   #geom_point(data=data,aes(x = long, y = lat),alpha=0.5,size=0.5,colour="grey")+
   coord_fixed(1.3)+
   scale_fill_viridis(breaks=seq(0,300,10))+
   theme_void()
+
+ggplotly(pl)
 ```
-```{r}
+
+```{r EU Data manipulation}
+
+require(rworldmap)
+
+
+# Get world map data
+worldmap <- maps::map("world", fill = TRUE, plot = FALSE)
+
+# Convert world to sp class
+IDs <- sapply(strsplit(worldmap$names, ":"), "[", 1L)
+world_sp <- map2SpatialPolygons(worldmap, IDs = IDs, 
+                                proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+# Convert world_sp to simple feature object
+world_sf <- st_as_sf(world_sp)
+
+# Add country ID
+world_sf <- world_sf %>%
+  mutate(region = map_chr(1:length(world_sp), function(i){
+    world_sp@polygons[[i]]@ID
+  }))
+
+###get only europe
+data(countryExData)
+countryExData <- countryExData %>% filter(grepl("Europe",GEO_subregion))
+eumap <- map_data("world") %>% filter(region %in% countryExData$Country)
+xmin <- ifelse(min(eumap$long)>180,min(eumap$long)-360,min(eumap$long))
+xmax <-  ifelse(max(eumap$long)>180,max(eumap$long)-360,max(eumap$long))
+ymin <-  ifelse(min(eumap$lat)>90,min(eumap$lat)-180,min(eumap$lat))
+ymax <-  ifelse(max(eumap$lat)>90,max(eumap$lat)-180,max(eumap$lat))
+
+filt_bbox <- sf::st_bbox(c(xmin = -9, 
+                           ymin = 36, 
+                           xmax = 42.5, 
+                           ymax = 70.1), 
+                         crs = st_crs(4326)) %>% 
+  sf::st_as_sfc(.)
+
+
+find_data <- sf::st_within(world_sf, filt_bbox)
+#> although coordinates are longitude/latitude, st_within assumes that they are planar
+europe_sf <- world_sf[which(lengths(find_data) != 0), ]
+
+europe_result <- st_within(point_sf, europe_sf, sparse = FALSE)
+
+# Calculate the total count of each polygon
+# Store the result as a new column "Count" in world_sf
+europe_sf <- europe_sf %>%
+  mutate(Count = apply(europe_result, 2, sum))
+
+# Convert world_sf to a data frame world_df 
+europe_df <- europe_sf
+st_geometry(europe_df) <- NULL
+
+# Get world data frame
+world_data <- map_data("world")
+
+# Merge world_data and world_df
+europe_data <- europe_df %>%
+  left_join(world_data, by = c("region"))
+
+europe_sf[1,]
+euInd <- NULL
+ind <- sf::st_intersects(point_sf, europe_sf)
+points_europe<-  point_sf[which(lengths(ind) != 0), ]
+points_europe <- cbind(points_europe,st_coordinates(points_europe))
+
+```
+
+```{r EUmap}
+pl <- ggplot() + 
+  geom_polygon(data = europe_data, aes(x = long, y = lat, group = group, fill = Count)) +
+  geom_point(data=points_europe,aes(x=X,y=Y,text=str_wrap(affiliation,50)),alpha=0.5,size=0.5,colour="grey")+
+  coord_fixed(1.3)+
+  scale_fill_viridis(breaks=seq(0,80,10))+
+  theme_void()
+
+ggplotly(pl)
+```
+
+
+```{r USdataManipulation}
 statemap <- maps::map("state", fill = TRUE, plot = FALSE)
 
 # Convert world to sp class
@@ -127,16 +213,20 @@ state_data <- map_data("state")
 # Merge world_data and world_df
 state_data2 <- state_data %>%
   left_join(state_df, by = c("region"))
-```
-```{r}
-ggplot() + 
-  geom_polygon(data = state_data2, aes(x = long, y = lat, group = group, fill = Count)) +
-  geom_point(data=data,aes(x = long, y = lat),alpha=0.5,size=0.5,colour="grey")+
-  coord_fixed(1.3)+
-  scale_fill_viridis(breaks=seq(0,50,10))+
-  theme_void()+
-  ylim(23,60)+
-  xlim(-130,-30)
+
+points_usa_index <- sf::st_intersects(point_sf, state_sf)
+points_usa <-  point_sf[which(lengths(points_usa_index) != 0), ]
+points_usa <- cbind(points_usa,st_coordinates(points_usa))
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r usamap}
+pl <- ggplot() + 
+  geom_polygon(data = state_data2, aes(x = long, y = lat, group = group, fill = Count)) +
+  geom_point(data=points_usa,aes(x=X,y=Y,text=str_wrap(affiliation,50)),alpha=0.5,size=0.5,colour="grey")+
+  coord_fixed(1.3)+
+  scale_fill_viridis(breaks=seq(0,50,10))+
+  theme_void()
+
+ggplotly(pl)
+```
