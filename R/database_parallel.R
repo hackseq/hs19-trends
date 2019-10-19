@@ -8,6 +8,8 @@ library(purrr)
 library(here)
 library(lubridate)
 
+##specify that here is here::here because of conflict with lubridate
+here <- here::here
 plan(multisession)
 
 searchTerms <- read.csv(here("/raw-data/SearchTerms.csv"))
@@ -51,4 +53,4 @@ df_raw_refined %<>% select(-c("history.received", "journal_meta.journal.id", "jo
   select(-starts_with("aff.")) %>%
   distinct()
 
-write.csv(df_raw, here::here("data","YourName-YourTopic.csv"))
+write.csv(df_raw, here::here("data","Raissa-test.csv"))
