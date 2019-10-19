@@ -5,10 +5,12 @@ library(widyr)
 library(igraph)
 library(ggplot2)
 library(ggraph)
+library(readr)
+library(tidygraph)
 
 
 # Read in data
-df <- read_csv("data/AllWebscrape.csv") %>% 
+df_raw <- read_csv("data/AllWebscrape.csv") %>% 
   rename_all(tolower) %>% 
   rename(term = topic) %>% 
   mutate(term = str_to_lower(term))
@@ -17,14 +19,39 @@ search_terms <- read_csv("raw-data/SearchTerms.csv") %>%
   rename_all(tolower) %>% 
   mutate(term = str_to_lower(term))
 
-df <- df %>% 
-  left_join(search_terms, by = "term")
+df <- df_raw %>% 
+  left_join(search_terms, by = "term") %>% 
+  mutate(topic = ifelse(term %in% c("global alignment sequence", "read alignment sequence")
+                        ,"Sequence Alignment"
+                        ,topic))
 
-# transform data
-abstracts <- df2019$abstract
+# Separate data by topics
+df_assembly <- df %>% 
+  filter(topic == "Assembly")
+df_databases <- df %>% 
+  filter(topic == "Databases")
+df_epigenetics <- df %>% 
+  filter(topic == "Epigenetics")
+df_geneexp <- df %>% 
+  filter(topic == "Gene Expression")
+df_genomeann <- df %>% 
+  filter(topic == "Genome Annotation")
+df_phylogenetics <- df %>% 
+  filter(topic == "Phylogenetics")
+df_seqal <- df %>% 
+  filter(topic == "Sequence Alignment")
+df_sequence <- df %>% 
+  filter(topic == "Sequencing")
+df_strucpred <- df %>% 
+  filter(topic == "Structural Prediction")
+df_varcall <- df %>% 
+  filter(topic == "Variant Calling")
 
-df <- df2019 %>% 
-  mutate(abstract_clean = removeWords(df2019$abstract, stop_words$word))
+### Create function
+visualize_bigrams <- function(df_name){
+# Create frequencies of bigrams
+df <- df_name %>% 
+  mutate(abstract_clean = removeWords(gsub("[^A-Za-z0-9 ]","",abstract), stop_words$word))
 
 df2 <- df %>%
   unnest_tokens(bigrams, abstract_clean, token = "ngrams", n = 2)
@@ -32,15 +59,31 @@ df2 <- df %>%
 df3 <- as.data.frame(table(df2$bigrams)) %>% 
   arrange(desc(Freq))
 
-# visualizations
-word_cors <- df3 %>% 
-  separate(Var1, c("item1", "item2")) %>% 
-  filter(Freq > 6)
+# Visualizations
+word_cors <- df3 %>%
+  top_n(100, Freq) %>% 
+  separate(Var1, c("item1", "item2"))
+
 
 word_cors %>%
   graph_from_data_frame() %>%
   ggraph(layout = "fr") +
-  geom_edge_link(aes(edge_alpha = Freq), show.legend = FALSE) +
-  geom_node_point(color = "lightblue", size = 5) +
+  geom_edge_link(aes(edge_alpha = Freq), show.legend = TRUE) +
+  geom_node_point(color = "lightblue", alpha = 0.5, size = 5) +
+  scale_fill_viridis_c() +
   geom_node_text(aes(label = name), repel = TRUE) +
   theme_void()
+}
+
+### Execute function
+visualize_bigrams(df)
+visualize_bigrams(df_assembly)
+visualize_bigrams(df_databases)
+visualize_bigrams(df_epigenetics)
+visualize_bigrams(df_geneexp)
+visualize_bigrams(df_genomeann)
+visualize_bigrams(df_phylogenetics)
+visualize_bigrams(df_seqal)
+visualize_bigrams(df_sequence)
+visualize_bigrams(df_strucpred)
+visualize_bigrams(df_varcall)
