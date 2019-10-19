@@ -63,6 +63,10 @@ Epigenetics, gene enhancer regulation
 Epigenetics, gene silencer regulation
 Metagenomics,	metagenomics
 Metagenomics,	microbiome
-Metagenomics,	qiime
-Metagenomics,	kraken
-Metagenomics,	MEGAN
+Metagenomics,	microbiota
+Metagenomics, metagenomic 
+Metagenomics,	shotgun metagenomic sequencing
+Metagenomics, multiple sample visualization
+Metagenomics, species frequency estimation
+Metagenomics, read binning
+Metagenomics, metagenome
