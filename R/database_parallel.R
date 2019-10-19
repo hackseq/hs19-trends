@@ -15,11 +15,11 @@ plan(multisession)
 searchTerms <- read.csv(here("/raw-data/SearchTerms.csv"))
 searchTerms$Term %<>% as.character()
 searchTerms <- searchTerms %>% filter(Topic=="Databases")
-
+topics <- unique(searchTerms$Topic)
 # ft_links() - get links for articles (xml and pdf).
 df_raw <- NULL
 
-for(st in searchTerms$Term[1]) {
+for(st in topics) {
 
   res1 <- ft_search(query = st, from = "plos", limit = 1000)
   
