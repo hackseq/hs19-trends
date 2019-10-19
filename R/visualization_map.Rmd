@@ -2,11 +2,14 @@
 title: "visualization_map"
 author: "Raissa and Emma"
 date: "19/10/2019"
-output: html_document
+output: 
+  html_document:
+    toc: true
+
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE,warning=FALSE,message=FALSE)
 library(ggplot2)
 library(dplyr)
 library(plotly)
@@ -18,10 +21,9 @@ library(maptools)
 library(maps)
 library(sf)
 library(readr)
+library(tidyverse)
 select <- dplyr::select
 ```
-
-## Make a bubble map with ggplot and plotly
 
 
 ```{r readData}
@@ -35,20 +37,8 @@ point_sf <- st_as_sf(data, coords = c("long", "lat"), crs = 4326)
 
 ```
 
+# World map showing the number of institutions per country
 
-```{r basicworldmap, echo=FALSE}
-# Libraries
-
-world <- map_data("world") 
-world
-```
-
-```{r testDensityPlot}
-ggplot()+
-  geom_polygon(data=world,aes(x=long, y=lat,group=group),fill="grey",alpha=0.3)+
-  stat_density2d(data=data,aes(x=long,y=lat,fill=..level..),geom="polygon",size=25)
-  
-```
 ```{r worldmapdatamanipulation}
 
 # Get world map data
@@ -98,10 +88,9 @@ pl <- ggplot() +
 ggplotly(pl)
 ```
 
+# Map of showing the number of institutions per country
+
 ```{r EU Data manipulation}
-
-require(rworldmap)
-
 
 # Get world map data
 worldmap <- maps::map("world", fill = TRUE, plot = FALSE)
@@ -159,8 +148,6 @@ world_data <- map_data("world")
 europe_data <- europe_df %>%
   left_join(world_data, by = c("region"))
 
-europe_sf[1,]
-euInd <- NULL
 ind <- sf::st_intersects(point_sf, europe_sf)
 points_europe<-  point_sf[which(lengths(ind) != 0), ]
 points_europe <- cbind(points_europe,st_coordinates(points_europe))
@@ -177,6 +164,8 @@ pl <- ggplot() +
 
 ggplotly(pl)
 ```
+
+# Map of the USA showing the number of institutions per country
 
 
 ```{r USdataManipulation}
