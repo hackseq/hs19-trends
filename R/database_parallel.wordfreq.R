@@ -25,7 +25,7 @@ searchTerms <- searchTerms %>% filter(Topic=="Metagenomics")
 df_raw <- NULL
 for(st in searchTerms$Term[1]) {
   
-  res1 <- ft_search(query = st, from = "plos", limit = 500)
+  res1 <- ft_search(query = st, from = "plos", limit = 1000)
   
   mylinks %<-% ft_links(res1)$plos$ids
   
@@ -56,7 +56,7 @@ df_raw_refined %<>% select(-c("history.received", "journal_meta.journal.id", "jo
   select(-starts_with("aff.")) %>%
   distinct()
 # ***changed data_raw to data_raw_refined***
-write.csv(df_raw, here::here("data","Swapna-Metagenomics500.csv"))
+write.csv(df_raw, here::here("data","Swapna-Metagenomics_1000.csv"))
 
 ##END OF PREVIOUS CODE @laijasmine
 
