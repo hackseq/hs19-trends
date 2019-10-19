@@ -38,7 +38,7 @@ These are the R Packages needed:
 * `future`
 * `lubridate`
 * `stringr`
-* `maps'
+* `maps`
 * `viridis`
 * `rgeos`
 * `sf`
