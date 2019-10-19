@@ -14,6 +14,7 @@ Graphic Visualization of trends in Bioinformatics
 * [Morgana Xu](https://github.com/ODataMine)
 * [Lucia Darrow](https://github.com/lmdarrow)
 * Swapna Menon
+* [Shannon Lo](https://github.com/shannonhlo)
 
 ## Approach
 1. Webscraping using the package Fulltext package, processing the data in the package pubchunks code for this can be found in [`R/Fulltext_Workflow.Rmd`](https://github.com/hackseq/hs19-trends/blob/master/R/FullText_Workflow.Rmd). We will be looking for: `doi`, `refDois`, `Year of Publication`, `Journal Name`, `publisher`, `author`, `research insitution`, `title`, `keywords`, `abstract`. 
