@@ -42,3 +42,6 @@ Python/.DS_Store
 
 # Rproj
 hackseq192.Rproj
+
+#database parallel
+R/database_parallel.R
