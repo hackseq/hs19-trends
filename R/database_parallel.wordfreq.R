@@ -12,6 +12,8 @@ library(here)
 # ***added lubridate***
 library(lubridate)
 
+here <- here::here
+
 plan(multisession)
 
 searchTerms <- read.csv(here("/raw-data/SearchTerms.csv"))
@@ -54,7 +56,7 @@ df_raw_refined %<>% select(-c("history.received", "journal_meta.journal.id", "jo
   select(-starts_with("aff.")) %>%
   distinct()
 # ***changed data_raw to data_raw_refined***
-write.csv(df_raw_refined, here::here("data","Swapna-Metagenomics500.csv"))
+write.csv(df_raw, here::here("data","Swapna-Metagenomics500.csv"))
 
 ##END OF PREVIOUS CODE @laijasmine
 
