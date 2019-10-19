@@ -11,6 +11,7 @@ library(ggplot2)
 library(dplyr)
 library(plotly)
 library(here)
+library(ggmap)
 ```
 
 ## Make a bubble map with ggplot and plotly
@@ -19,7 +20,8 @@ library(here)
 ```{r readData}
 
 data <- read_csv(here("data","affiliations_lat_long.csv"))
-data <- data %>% select(-X1) %>% distinct()
+data <- data %>% select(-X1) %>% distinct() %>%
+        drop_na()
 
 ```
 
@@ -31,6 +33,60 @@ data <- data %>% select(-X1) %>% distinct()
 # Get the world polygon and extract UK
 library(maps)
 world <- map_data("world") 
+world
+```
+```{r}
+ggplot()+
+  geom_polygon(data=world,aes(x=long, y=lat,group=group),fill="grey",alpha=0.3)+
+  stat_density2d(data=data,aes(x=long,y=lat,fill=..level..),geom="polygon",size=25)
+  
+```
+```{r}
+# Convert to simple feature object
+point_sf <- st_as_sf(data, coords = c("long", "lat"), crs = 4326)
+
+# Get world map data
+worldmap <- maps::map("world", fill = TRUE, plot = FALSE)
+
+# Convert world to sp class
+IDs <- sapply(strsplit(worldmap$names, ":"), "[", 1L)
+world_sp <- map2SpatialPolygons(worldmap, IDs = IDs, 
+                                proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+# Convert world_sp to simple feature object
+world_sf <- st_as_sf(world_sp)
+
+# Add country ID
+world_sf <- world_sf %>%
+  mutate(region = map_chr(1:length(world_sp@polygons), function(i){
+    world_sp@polygons[[i]]@ID
+  }))
+
+result <- st_within(point_sf, world_sf, sparse = FALSE)
+
+# Calculate the total count of each polygon
+# Store the result as a new column "Count" in world_sf
+world_sf <- world_sf %>%
+  mutate(Count = apply(result, 2, sum))
+
+# Convert world_sf to a data frame world_df 
+world_df <- world_sf
+st_geometry(world_df) <- NULL
+
+# Get world data frame
+world_data <- map_data("world")
+
+# Merge world_data and world_df
+world_data2 <- world_data %>%
+  left_join(world_df, by = c("region"))
+```
+```{r}
+ggplot() + 
+  geom_polygon(data = world_data2, aes(x = long, y = lat, group = group, fill = Count)) +
+  #geom_point(data=data,aes(x = long, y = lat),alpha=0.5,size=0.5,colour="grey")+
+  coord_fixed(1.3)+
+  scale_fill_viridis(breaks=seq(0,300,10))+
+  theme_void()
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
