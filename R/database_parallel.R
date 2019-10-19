@@ -18,8 +18,9 @@ searchTerms <- searchTerms %>% filter(Topic=="Databases")
 
 # ft_links() - get links for articles (xml and pdf).
 df_raw <- NULL
+
 for(st in searchTerms$Term[1]) {
-  
+
   res1 <- ft_search(query = st, from = "plos", limit = 1000)
   
   mylinks %<-% ft_links(res1)$plos$ids
@@ -53,4 +54,4 @@ df_raw_refined %<>% select(-c("history.received", "journal_meta.journal.id", "jo
   select(-starts_with("aff.")) %>%
   distinct()
 
-write.csv(df_raw, here::here("data","Raissa-test.csv"))
+write.csv(df_raw_refined, here::here("data","Raissa-test.csv"))
