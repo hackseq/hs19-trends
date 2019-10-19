@@ -1,4 +1,4 @@
-#PREVIOUS CODE from database_parallel.R
+#PREVIOUS CODE from database_parallel.R  @laijasmine
 
 library(future)
 library(fulltext)
@@ -56,7 +56,7 @@ df_raw_refined %<>% select(-c("history.received", "journal_meta.journal.id", "jo
 # ***changed data_raw to data_raw_refined***
 write.csv(df_raw_refined, here::here("data","Swapna-Metagenomics500.csv"))
 
-##END OF PREVIOUS CODE
+##END OF PREVIOUS CODE @laijasmine
 
 ## CODE FOR DATA VISUALIZATION 
 
