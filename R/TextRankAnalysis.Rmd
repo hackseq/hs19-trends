@@ -1,0 +1,61 @@
+---
+title: "TextRank"
+author: "Lucia Darrow"
+date: "October 19, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries}
+
+library(data.table)
+library(textrank)
+library(udpipe)
+```
+
+
+```{r import}
+
+termResults <- fread("./data/NGS.csv")
+termResults2019 <- termResults %>% filter(Year == 2019)
+
+```
+
+
+```{r textRank}
+
+titles <- termResults2019$titles %>%
+  as.character() %>%
+  na.omit()
+
+titles <- paste0(titles, '.')
+titles <- gsub("[.][.]",".", titles)
+
+titles <- paste(titles, collapse = "\n")
+
+# Sentiment
+# get_nrc_sentiment(perfectClub)
+
+ud_model <- udpipe_download_model(language = "english")
+ud_model <- udpipe_load_model(ud_model$file_model)
+titles <- udpipe_annotate(ud_model, x = titles)
+titles <- as.data.frame(titles)
+
+keyw <- textrank_keywords(titles$lemma,
+                          relevant = titles$upos %in% c("NOUN", "VERB", "ADJ"))
+subset(keyw$keywords, ngram > 1 & freq > 1)
+
+titles$textrank_id <- unique_identifier(titles, c("doc_id", "paragraph_id", "sentence_id"))
+sentences <- unique(titles[, c("textrank_id", "sentence")])
+terminology <- subset(titles, upos %in% c("NOUN", "ADJ"))
+terminology <- terminology[, c("textrank_id", "lemma")]
+
+tr <- textrank_sentences(data = sentences, terminology = terminology)
+
+s <- summary(tr, n = 15, keep.sentence.order = TRUE)
+s %<>% as.data.frame()
+
+```
