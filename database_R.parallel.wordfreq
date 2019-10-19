@@ -59,6 +59,11 @@ write.csv(df_raw_refined, here::here("data","Swapna-Metagenomics500.csv"))
 ##END OF PREVIOUS CODE
 
 ## CODE FOR DATA VISUALIZATION 
+
+library(tm)
+library(wordcloud)
+library(RColorBrewer)
+
 # Split data into before 2014 and after 2014
 df_raw_refined <- df_raw_refined %>% 
   mutate(timeline = if_else(Year < 2014, "2006-2013", "2014-2019", "unknown" ))
