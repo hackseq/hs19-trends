@@ -52,7 +52,7 @@ df_raw_refined %<>% select(-c("history.received", "journal_meta.journal.id", "jo
   rename("journal" = "journal_meta.journal.title.group") %>%
   select(-starts_with("authors.")) %>% 
   select(-starts_with("aff.")) %>%
-  distinct() 
+  distinct(doi, .keep_all = TRUE) 
 
 
 summaryDOI <- df_raw_refined %>% group_by(doi) %>% summarise_all(function(x)(n_distinct(x)))
