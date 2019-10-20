@@ -47,7 +47,7 @@ These are the R Packages needed:
 * `igraph`
 * `ggraph`
 * `tm`
-* `gganimate'
+* `gganimate`
 * `data.table`
 * `textrank`
 * `udpipe`
