@@ -19,9 +19,9 @@ output: html_document
 
 ```{r}
 library(reticulate)
-use_python("PYTHON PATH",required=T)
-#py_config()
-all <- read_csv(here::here("data","AllWebscrape.csv"))
+use_python("YOUR PATH TO PYTHON",required=T)
+py_config()
+#all <- read_csv(here::here("data","AllWebscrape.csv"))
 ```
 
 ```{python}
@@ -30,7 +30,7 @@ import googlemaps
 aff_data=pd.read_csv("AllWebscrape2.csv")
 aff_list=aff_data['affiliation'].tolist()
 aff_list_unique=list(set(aff_list))
-gmaps=googlemaps.Client(key="Your Key")
+gmaps=googlemaps.Client(key="YOUR KEY")
 
 #test_aff_list=["Simon Fraser University","Univeristy of British Columbia"]
 latlong_list= []
@@ -49,17 +49,4 @@ affiliates_data_latlong_uni['latlong']=latlong_list
 aff_data.to_csv("affiliations_lat_long.csv")
 ```
 
-```{r}
-#all=read.csv("AllWebscrape.csv")
 
-
-for( i in 1:nrow(all))
-{
-  result <- geocode(all$affiliation[i],output="latlona",source="google")
-all$lon[i]<-as.numeric(result[1])
-all$lat[i]<-as.numeric(result[2])
-}
-
-write.csv(all,file="Webscrape_geo.csv")
-```
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
