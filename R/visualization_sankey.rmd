@@ -119,39 +119,39 @@ grid.draw(sankey)
 
 ```
 
+Access the main webscraped data file and identify the top affiliations by publication count.
 
+```{r topAffTopics}
 
-```{r}
-All %>% group_by(affiliation,topic) %>% summarise(count=n()) %>% arrange(desc(count)) -> affTrends
+# Group and summarize the data by affiliation to find the top institutions 
+All %>% group_by(affiliation,topic) %>% 
+  summarise(count=n()) %>% 
+  arrange(desc(count)) -> affTrends
 affTrends %<>% na.omit() -> affTrends
 
-All %>% group_by(affiliation,topic) %>% summarise(count=n()) %>% na.omit() %>% arrange(desc(count)) -> affTopic
+All %>% group_by(affiliation,topic) %>% 
+  summarise(count=n()) %>% na.omit() %>% 
+  arrange(desc(count)) -> affTopic
 
+# Remove NA values
 affTopic %<>% na.omit() -> affTopic
 
-# affTopic <- affTopic[affTopic$affiliation!="NA, NA",]
-
-affTopic %>% group_by(affiliation) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> TopAff
-
+# Select the top ten institutions for further analysis
+affTopic %>% group_by(affiliation) %>% 
+  summarise(count=sum(count)) %>% arrange(desc(count)) -> TopAff
 affTopic %>% filter(affiliation %in% TopAff[1:10,]$affiliation) -> topAffTopics
-colnames(topAffTopics)
+
 ```
 
+Next, set up a Sankey flow diagram to display affiliations on the LHS (source) and topics on the RHS (sink). The weight of each connection represents the number of publications.
 
-```{r}
+```{r affSankey}
 
-datSK <- data.frame(From=c(as.character(topAffTopics$affiliation)),To=(as.character(topAffTopics$topic)),Weight=topAffTopics$count)
+datSK <- data.frame(From=c(as.character(topAffTopics$affiliation)),
+                    To=(as.character(topAffTopics$topic)),
+                    Weight=topAffTopics$count)
 
-Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
-                     options=list(
-                       sankey="{link: {color: { fill: '#871b47' } },
-                            node: { color: { fill: '#2A5E96' },
-                            label: { color: '#000000'} }}"))
-plot(Sankey)
-
-library(ggalluvial)
 is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
-
 
 ggplot(datSK,
       aes(y = Weight, axis1 = From, axis2 = To)) +
