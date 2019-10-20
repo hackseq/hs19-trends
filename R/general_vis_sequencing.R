@@ -3,9 +3,10 @@ library(plotly)
 library(cowplot)
 library(tidyverse)
 
+# Load data for all 7 sequencing types
 seq_spec <- read_csv("./data/sequencing-specific.csv")
 
-# other static graphs
+# other static graphs from initial exploration
 seq_spec %>% 
   group_by(topic, Year) %>% 
   summarise(total = n()) %>% 
@@ -19,9 +20,10 @@ seq_spec %>%
   ggplot(aes(x = Year, y = total, colour = topic)) +
   geom_line()
 
+#viewing it with ggplotly
 ggplotly()
 
-# static graph of cum total
+# static graph of cum total to check
 seq_spec %>% 
   filter(topic != "NGS",
          topic != "third-generation sequencing",
@@ -79,6 +81,9 @@ p <- ordered_df %>%
   transition_states(Year, transition_length = 4, state_length = 8) +
   ease_aes("cubic-in-out") +
   labs(title = "Year {closest_state}") +
+  theme_cowplot()
+
++
   theme(legend.position = "none",
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank(),
