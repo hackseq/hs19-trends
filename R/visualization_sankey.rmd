@@ -70,7 +70,6 @@ topAuthorTopics$Term <- str_replace_all(topAuthorTopics$Term, " sequence","")
 topAuthorTopics <- left_join(topAuthorTopics,level,by= "Term")
 
 topAuthorTopics %>% group_by(author1,Topic) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> topAuthorTopics
-unique(as.character(topAuthorTopics$Topic))
 ```
 
 Next, set up a Sankey flow diagram to display authors on the LHS (source) and topics on the RHS (sink). The weight of each connection represents the number of publications.
@@ -134,38 +133,113 @@ affTopic %<>% na.omit() -> affTopic
 affTopic %>% group_by(affiliation) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> TopAff
 
 affTopic %>% filter(affiliation %in% TopAff[1:10,]$affiliation) -> topAffTopics
-colnames(topAffTopics)
+
+colnames(topAffTopics)[2] <- c("Term")
+
+
+topAffTopics$Term <- str_replace_all(topAffTopics$Term, " sequence","")
+
+
+topAffTopics <- left_join(topAffTopics,level,by="Term")
+
+
+topAffTopics %>% group_by(affiliation,Topic) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> topAffTopics
+
+# #Select Top 10
+# topAffTopics <- topAffTopics[1:10,]
+topAffTopics
+```
+```{r}
+topAffTopics$affiliation <- gsub('Department of ', '', topAffTopics$affiliation)
+topAffTopics$affiliation <- gsub('University of ', 'U ', topAffTopics$affiliation)
+topAffTopics$affiliation <- gsub('United States of America', 'USA', topAffTopics$affiliation)
+topAffTopics$affiliation <- gsub('University', 'U', topAffTopics$affiliation)
+
+topAffTopics$affiliation <- gsub("(.)\n.+", "\\1", topAffTopics$affiliation)
+gsub(".*, U ", "", topAffTopics$affiliation)
+
+
+topAffTopics$affiliation <-str_replace_all(topAffTopics$affiliation,",","\n") 
+topAffTopics$affiliation <- str_replace(topAffTopics$affiliation,"\n",",")
+locationAfterN <- str_locate(topAffTopics$affiliation,"\n.+")
+
+
+topAffTopics$affiliation <- str_sub(topAffTopics$affiliation,end=locationAfterN[,1]-1)
+# str_replace(topAffTopics$affiliation,"\n*+.......",",")
+topAffTopics$affiliation <-str_replace_all(topAffTopics$affiliation,",","\n") 
+topAffTopics$affiliation
+
+topAffTopics[str_detect(topAffTopics$affiliation,"U"),]
+
 ```
 
 
+<!-- ```{r} -->
+
+<!-- datSK <- data.frame(From=c(as.character(topAffTopics$affiliation)),To=(as.character(topAffTopics$Topic)),Weight=topAffTopics$count) -->
+
+<!-- Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight", -->
+<!--                      options=list( -->
+<!--                        sankey="{link: {color: { fill: '#871b47' } }, -->
+<!--                             node: { color: { fill: '#2A5E96' }, -->
+<!--                             label: { color: '#000000'} }}")) -->
+<!-- plot(Sankey) -->
+
+<!-- library(ggalluvial) -->
+<!-- is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE) -->
+
+
+<!-- ggplot(datSK, -->
+<!--       aes(y = Weight, axis1 = From, axis2 = To)) + -->
+<!--  geom_alluvium(aes(fill=From), width = 1/12) + -->
+<!--  geom_stratum(alpha=0.5,width = 1/12, color = "grey") + -->
+<!--  geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5) + scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) + -->
+<!--  scale_fill_viridis_d() + theme_void() + theme(axis.title.y = element_blank(), -->
+<!--     axis.title.x=element_blank(), -->
+<!--     axis.ticks.x=element_blank(), -->
+<!--     axis.ticks.y=element_blank(), -->
+<!--     axis.text.x=element_blank(), -->
+<!--     axis.text.y=element_blank(), -->
+<!--     legend.position="none") -->
+
+
+
+<!-- ``` -->
 ```{r}
+datSK <- data.frame(From=c(as.character(topAffTopics$affiliation)),To=(as.character(topAffTopics$Topic)),Weight=topAffTopics$count) 
 
-datSK <- data.frame(From=c(as.character(topAffTopics$affiliation)),To=(as.character(topAffTopics$topic)),Weight=topAffTopics$count)
+datSK %>% group_by(From) %>% 
+  summarise(count=sum(Weight)) -> pubByAff
+datSK <- left_join(datSK,pubByAff,by="From")
 
-Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
-                     options=list(
-                       sankey="{link: {color: { fill: '#871b47' } },
-                            node: { color: { fill: '#2A5E96' },
-                            label: { color: '#000000'} }}"))
-plot(Sankey)
-
-library(ggalluvial)
-is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
-
-
-ggplot(datSK,
+# Plot the sankey diagram using ggplot framework
+sankey <- ggplot(datSK,
       aes(y = Weight, axis1 = From, axis2 = To)) +
  geom_alluvium(aes(fill=From), width = 1/12) +
- geom_stratum(alpha=0.5,width = 1/12, color = "grey") +
- geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5) + scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
- scale_fill_viridis_d() + theme_void() + theme(axis.title.y = element_blank(),
+ geom_stratum(alpha=0,width = 1/12, color = "black") +
+ #geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5, hjust=0.9) + 
+  scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
+  scale_fill_viridis_d() + 
+  theme_void() + 
+  theme(
+    axis.title.y = element_blank(),
     axis.title.x=element_blank(),
     axis.ticks.x=element_blank(),
     axis.ticks.y=element_blank(),
     axis.text.x=element_blank(),
     axis.text.y=element_blank(),
-    legend.position="none")
-
-
-
+    legend.position="none"
+    ) + 
+  ggrepel::geom_label_repel(aes(label=From),stat="stratum",size=3,direction="x",hjust=10) +
+  ggrepel::geom_label_repel(aes(label=To),stat="stratum",size=3,direction="y",nudge_x = 0.5) +
+  geom_label(aes(label=Weight),stat="stratum",alpha=0.8) + ggtitle("")
+  
+  
+  
+sankey <- set_panel_size(sankey,
+                          width  = unit(18, "cm"),
+                          height = unit(10, "cm"))
+grid.newpage()
+grid.draw(sankey)
 ```
+
