@@ -5,6 +5,10 @@ date: "19 Oct 2019"
 output: html_document
 ---
 
+```{r Setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = FALSE, message = FALSE, warning = FALSE, fig.width=12, fig.height=8)
+```
+
 ```{r Load Dependencies, results='hide'}
 library(tidyverse)
 library(tidytext)
@@ -22,7 +26,7 @@ The following function(s) are defined below:
     + *df_name*: name of dataframe that contains the text field of interest
     + *textfield*: name of text field (ie. column name)
 ```{r Define Functions, results='hide'}
-visualize_bigrams <- function(df_name, textfield){
+visualize_bigrams <- function(df_name, textfield, topic_title){
   
     # Create frequencies of bigrams
     df_cleaned <- df_name %>% 
@@ -54,19 +58,22 @@ visualize_bigrams <- function(df_name, textfield){
     
     graph_from_data_frame(vertices =  df_word_list, d = df_top_bigrams) -> graph_hold
     
-    graph_hold %>%
+    pl <- graph_hold %>%
       ggraph(layout = "fr") +
       geom_edge_link(aes(edge_alpha = Edge_Frequency), show.legend = TRUE) +
       geom_node_point(aes(color = Term_Frequency, size = Term_Frequency), alpha = 0.7) +
       scale_fill_viridis_c() +
       geom_node_text(aes(label = name), repel = TRUE) +
       scale_color_viridis_c(direction = -1) +
-      theme_void() + guides(size=FALSE) +
-      title(main = {{title}})
+      theme_void() +
+      guides(size=FALSE) +
+      labs(title = quo_name(topic_title)) +
+      theme(plot.title = element_text(size = 26, face = "bold"))
     
-    ggsave(filename = paste0("../figures/", "bigrams_", str_to_lower(str_replace(topic_title, "\\s", "_")), ".png")
+    ggsave(pl,filename = paste0("../figures/", "bigrams_", str_to_lower(str_replace(topic_title, "\\s", "_")), ".png")
            ,width = 12
            ,height = 8)
+    pl
 }
 ```
 
@@ -123,16 +130,16 @@ df_varcall <- df %>%
 
 Create bigram plots to visualize the relationships between two words. The darker lines represent higher frequency of occurrence.
 ```{r Create Bigram Plots}
-visualize_bigrams(df,abstract)
-visualize_bigrams(df_assembly, abstract)
-visualize_bigrams(df_databases, abstract)
-visualize_bigrams(df_epigenetics, abstract)
-visualize_bigrams(df_geneexp, abstract)
-visualize_bigrams(df_genomeann, abstract)
-visualize_bigrams(df_phylogenetics, abstract)
-visualize_bigrams(df_seqal, abstract)
-visualize_bigrams(df_sequence, abstract)
-visualize_bigrams(df_strucpred, abstract)
-visualize_bigrams(df_varcall, abstract)
+#visualize_bigrams(df,abstract, "All Topics")
+visualize_bigrams(df_assembly, abstract, "Assembly")
+visualize_bigrams(df_databases, abstract, "Databases")
+visualize_bigrams(df_epigenetics, abstract, "Epigenetics")
+visualize_bigrams(df_geneexp, abstract, "Gene Expression")
+visualize_bigrams(df_genomeann, abstract, "Genome Annotation")
+visualize_bigrams(df_phylogenetics, abstract, "Phylogenetics")
+visualize_bigrams(df_seqal, abstract, "Sequence Alignment")
+visualize_bigrams(df_sequence, abstract, "Sequencing")
+visualize_bigrams(df_strucpred, abstract, "Structural Prediction")
+visualize_bigrams(df_varcall, abstract, "Variant Calling")
 ```
 
