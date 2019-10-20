@@ -1,32 +1,32 @@
 Topic,Term
 Sequencing,sanger sequencing
 Sequencing,long read sequencing
-Sequencing, NGS
-Sequence Alignment ,read alignment
-Sequence Alignment ,global alignment
-Sequence Alignment ,local sequence alignment
-Variant Calling ,CNV
-Variant Calling ,SNP
-Variant Calling ,Tandem Repeat
-Assembly ,short read assembly
-Assembly ,long read assembly
-Assembly ,hybrid assembly
+Sequencing,NGS
+Sequence Alignment,read alignment
+Sequence Alignment,global alignment
+Sequence Alignment,local sequence alignment
+Variant Calling,CNV
+Variant Calling,SNP
+Variant Calling,Tandem Repeat
+Assembly,short read assembly
+Assembly,long read assembly
+Assembly,hybrid assembly
 Databases,GenBank
 Databases,EMBL
 Databases,DDBJ
-Genome Annotation, annotation pipeline
-Genome Annotation, functional genome annotation
-Genome Annotation, gene prediction
-Gene Expression, transcript quantification
-Gene Expression, differential expression
-Gene Expression, gene expression
-Phylogenetics, phylogenetics
-Phylogenetics, evolutionary genetics
-Phylogenetics, evolution genetics
-Structural Prediction, secondary structure prediction
-Structural Prediction, tertiary structure prediction
-Structural Prediction, structural prediction
+Genome Annotation,annotation pipeline
+Genome Annotation,functional genome annotation
+Genome Annotation,gene prediction
+Gene Expression,transcript quantification
+Gene Expression,differential expression
+Gene Expression,gene expression
+Phylogenetics,phylogenetics
+Phylogenetics,evolutionary genetics
+Phylogenetics,evolution genetics
+Structural Prediction,secondary structure prediction
+Structural Prediction,tertiary structure prediction
+Structural Prediction,structural prediction
 Epigenetics,epigenetics bioinformatics
-Metagenomics,"	metagenomics"
-Metagenomics,"	microbiome"
-Metagenomics,"	shotgun metagenomic sequencing"
+Metagenomics,metagenomics
+Metagenomics,microbiome
+Metagenomics,shotgun metagenomic sequencing
