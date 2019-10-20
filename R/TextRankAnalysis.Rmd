@@ -27,14 +27,28 @@ termResults2019 <- termResults %>% filter(Year == 2019)
 
 ```{r textRank}
 
-titles <- termResults2019$titles %>%
+# titles <- termResults2019$titles %>%
+#   as.character() %>%
+#   na.omit()
+# 
+# titles <- paste0(titles, '.')
+# titles <- gsub("[.][.]",".", titles)
+# 
+# titles <- paste(titles, collapse = "\n")
+
+abstracts <- termResults2019$abstract %>%
   as.character() %>%
   na.omit()
 
-titles <- paste0(titles, '.')
-titles <- gsub("[.][.]",".", titles)
+# abstracts %<>% grep(pattern = ". ", x= "\n")
+abstracts %<>% str_replace_all(pattern = fixed(". "), replacement = "\n")
 
-titles <- paste(titles, collapse = "\n")
+abstracts <- paste0(abstracts, '.')
+abstracts <- gsub("[.][.]",".", abstracts)
+
+abstracts <- paste(abstracts, collapse = "\n")
+
+titles <- abstracts
 
 # Sentiment
 # get_nrc_sentiment(perfectClub)
