@@ -15,7 +15,7 @@ Graphic Visualization of trends in Bioinformatics
 * [Lucia Darrow](https://github.com/lmdarrow)
 * [Swapna Menon](https://github.com/sm30)
 * [Shannon Lo](https://github.com/shannonhlo)
-* [Elliot](https://github.com/elliotykf)
+* [Elliot YKF](https://github.com/elliotykf)
 
 ## Approach
 1. Webscraping using the package `fulltext` package, processing the data in the package `pubchunks` code for this can be found in [`R/Fulltext_Workflow.Rmd`](https://github.com/hackseq/hs19-trends/blob/master/R/FullText_Workflow.Rmd). 
