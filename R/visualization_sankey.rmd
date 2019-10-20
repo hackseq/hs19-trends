@@ -118,29 +118,22 @@ grid.draw(sankey)
 
 ```
 
-Access the main webscraped data file and identify the top affiliations by publication count.
 
-```{r topAffTopics}
 
-# Group and summarize the data by affiliation to find the top institutions 
-All %>% group_by(affiliation,topic) %>% 
-  summarise(count=n()) %>% 
-  arrange(desc(count)) -> affTrends
+```{r}
+All %>% group_by(affiliation,topic) %>% summarise(count=n()) %>% arrange(desc(count)) -> affTrends
 affTrends %<>% na.omit() -> affTrends
 
-All %>% group_by(affiliation,topic) %>% 
-  summarise(count=n()) %>% na.omit() %>% 
-  arrange(desc(count)) -> affTopic
+All %>% group_by(affiliation,topic) %>% summarise(count=n()) %>% na.omit() %>% arrange(desc(count)) -> affTopic
 
-# Remove NA values
 affTopic %<>% na.omit() -> affTopic
 
-# Select the top ten institutions for further analysis
-affTopic %>% group_by(affiliation) %>% 
-  summarise(count=sum(count)) %>% arrange(desc(count)) -> TopAff
+# affTopic <- affTopic[affTopic$affiliation!="NA, NA",]
+
+affTopic %>% group_by(affiliation) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> TopAff
+
 affTopic %>% filter(affiliation %in% TopAff[1:10,]$affiliation) -> topAffTopics
 
-<<<<<<< HEAD
 colnames(topAffTopics)[2] <- c("Term")
 
 
@@ -176,8 +169,45 @@ topAffTopics$affiliation <- str_sub(topAffTopics$affiliation,end=locationAfterN[
 topAffTopics$affiliation <-str_replace_all(topAffTopics$affiliation,",","\n") 
 topAffTopics$affiliation
 
-topAffTopics[str_detect(topAffTopics$affiliation,"U"),]
+gsub("+.\n ", "", topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")]) 
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")]
+# 
+# locationAfterN <- str_locate(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")],"\n.+")
+# topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")] <- str_sub(topAffTopics$affiliation,end=locationAfterN[,1]-1)
+# 
+# topAffTopics$affiliation
 
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")]
+
+locationAfterN1 <-str_locate(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")],"\n.+")
+
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")] <- str_sub(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")],start=locationAfterN1[,1]+2)
+
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"California")] <- str_replace(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"California")]," California ","C ")
+
+
+
+locationAfterN3 <-str_locate(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"College")],"\n.+")
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"College")] <- str_sub(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"College")],start=locationAfterN3[,1]+2)
+
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")]
+
+locationAfterN4 <-str_locate(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")],"\n.+")
+
+
+topAffTopics$affiliation
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")]
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")]
+locationAfterN4
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")] <- str_sub(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")],end=locationAfterN4[,1]-1)
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"European")] <- str_replace(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"European")],"European Molecular Biology Laborator", "EMBL")
 ```
 
 
@@ -221,21 +251,6 @@ datSK <- left_join(datSK,pubByAff,by="From")
 
 # Plot the sankey diagram using ggplot framework
 sankey <- ggplot(datSK,
-=======
-```
-
-Next, set up a Sankey flow diagram to display affiliations on the LHS (source) and topics on the RHS (sink). The weight of each connection represents the number of publications.
-
-```{r affSankey}
-
-datSK <- data.frame(From=c(as.character(topAffTopics$affiliation)),
-                    To=(as.character(topAffTopics$topic)),
-                    Weight=topAffTopics$count)
-
-is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
-
-ggplot(datSK,
->>>>>>> 4b8f66c45a4c9c9dab6b07a48edebda248ebe87c
       aes(y = Weight, axis1 = From, axis2 = To)) +
  geom_alluvium(aes(fill=From), width = 1/12) +
  geom_stratum(alpha=0,width = 1/12, color = "black") +
@@ -250,11 +265,12 @@ ggplot(datSK,
     axis.ticks.y=element_blank(),
     axis.text.x=element_blank(),
     axis.text.y=element_blank(),
-    legend.position="none"
+    legend.position="none",
+    plot.title=element_text(hjust=0.5)
     ) + 
   ggrepel::geom_label_repel(aes(label=From),stat="stratum",size=3,direction="x",hjust=10) +
   ggrepel::geom_label_repel(aes(label=To),stat="stratum",size=3,direction="y",nudge_x = 0.5) +
-  geom_label(aes(label=Weight),stat="stratum",alpha=0.8) + ggtitle("")
+  geom_label(aes(label=Weight),stat="stratum",alpha=0.8) + ggtitle("Top 10 Institutions Publications By Topic") 
   
   
   
@@ -263,5 +279,6 @@ sankey <- set_panel_size(sankey,
                           height = unit(10, "cm"))
 grid.newpage()
 grid.draw(sankey)
+
 ```
 
