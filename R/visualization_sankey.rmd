@@ -22,72 +22,20 @@ library(stringr)
 library(ggplot2)
 library(magrittr)
 library(plotly)
+library(tidyverse)
 library(googleVis)
+library(ggrepel)
+
+library(egg)
+library(grid)
 ```
 
 
-```{r import}
 
-termResults <- read.csv("C:/Users/ellio/Desktop/hs19-trends/data/WebscrapeTopic/NGS.csv")
-termResults2019 <- termResults %>% filter(Year == 2019)
-```
-
-
-```{r textRank}
-
-abstract <- termResults2019$abstract %>%
-  as.character() %>%
-  na.omit()
-
-
-```
-```{r}
-
-#abstract <- paste0(abstract, '.')
-#abstract <- gsub("[.][.]",".", abstract)
-
-#abstract <- paste(abstract, collapse = "\n")
-stopwords_regex = paste(stopwords('en'),collapse='\\b|\\b')
-stopwords_regex = paste0('\\b',stopwords_regex,'\\b')
-documents = str_replace_all(abstract,stopwords_regex,"")
-
-tt <- DocumentTermMatrix(Corpus(VectorSource(documents)))
-lda <- LDA(tt,k=2,control=list(seed=1))
-tidy <- tidy(lda,matrix="beta")
-
-tidy %>% group_by(topic) %>% top_n(30,beta) %>% ungroup() %>% arrange(topic,-beta)
-```
-
-```{r}
-# Sentiment
-# get_nrc_sentiment(perfectClub)
-
-ud_model <- udpipe_download_model(language = "english")
-ud_model <- udpipe_load_model(ud_model$file_model)
-titles <- udpipe_annotate(ud_model, x = titles)
-titles <- as.data.frame(titles)
-
-keyw <- textrank_keywords(titles$lemma,
-                          relevant = titles$upos %in% c("NOUN", "VERB", "ADJ"))
-subset(keyw$keywords, ngram > 1 & freq > 1)
-
-titles$textrank_id <- unique_identifier(titles, c("doc_id", "paragraph_id", "sentence_id"))
-sentences <- unique(titles[, c("textrank_id", "sentence")])
-terminology <- subset(titles, upos %in% c("NOUN", "ADJ"))
-terminology <- terminology[, c("textrank_id", "lemma")]
-
-tr <- textrank_sentences(data = sentences, terminology = terminology)
-
-s <- summary(tr, n = 15, keep.sentence.order = TRUE)
-s %<>% as.data.frame()
-
-```
 
 ```{r}
 
-All <- fread("C:/Users/ellio/Desktop/hs19-trends/data/AllWebscrape.csv")
-colnames(All)
-
+All <- read_csv("../data/AllWebscrape.csv")
 
 All %>% group_by(author1,topic) %>% summarise(count=n()) %>% na.omit() %>% arrange(desc(count)) -> authorTopic
 
@@ -98,7 +46,6 @@ authorTopic <- authorTopic[authorTopic$author1!="NA, NA",]
 authorTopic %>% group_by(author1) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> TopAuthors
 
 authorTopic %>% filter(author1 %in% TopAuthors[1:10,]$author1) -> topAuthorTopics
-unique(topAuthorTopics$topic)
 ```
 
 
@@ -106,16 +53,16 @@ unique(topAuthorTopics$topic)
 ```{r}
 
 datSK <- data.frame(From=c(as.character(topAuthorTopics$author1)),To=(as.character(topAuthorTopics$topic)),Weight=topAuthorTopics$count)
-
-Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
-                     options=list(
-                       sankey="{link: {color: { fill: '#871b47' } },
-                            node: { color: { fill: '#2A5E96' },
-                            label: { color: '#000000'} }}"))
-plot(Sankey)
-
-library(ggalluvial)
-is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
+# 
+# Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
+#                      options=list(
+#                        sankey="{link: {color: { fill: '#871b47' } },
+#                             node: { color: { fill: '#2A5E96' },
+#                             label: { color: '#000000'} }}"))
+# plot(Sankey)
+# 
+# library(ggalluvial)
+# is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
 
 
 ggplot(datSK,
@@ -130,8 +77,6 @@ ggplot(datSK,
     axis.text.x=element_blank(),
     axis.text.y=element_blank(),
     legend.position="bottom")
-
-
 
 
 ```
@@ -150,34 +95,58 @@ topAuthorTopics %>% group_by(author1,Topic) %>% summarise(count=sum(count)) %>% 
 unique(as.character(topAuthorTopics$Topic))
 ```
 
+
+
+
+
 ```{r}
 
 datSK <- data.frame(From=c(as.character(topAuthorTopics$author1)),To=(as.character(topAuthorTopics$Topic)),Weight=topAuthorTopics$count)
 
-Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
-                     options=list(
-                       sankey="{link: {color: { fill: '#871b47' } },
-                            node: { color: { fill: '#2A5E96' },
-                            label: { color: '#000000'} }}"))
-plot(Sankey)
 
-library(ggalluvial)
-is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
+datSK %>% group_by(From) %>% summarise(count=sum(Weight)) -> pubByAuthor
+datSK <- left_join(datSK,pubByAuthor,by="From")
+# datSK$From <- paste(datSK$From,datSK$count, sep=" | ")
+
+# Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
+#                      options=list(
+#                        sankey="{link: {color: { fill: '#871b47' } },
+#                             node: { color: { fill: '#2A5E96' },
+#                             label: { color: '#000000'} }}"))
+# plot(Sankey)
+# 
+# library(ggalluvial)
+# is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
 
 
-ggplot(datSK,
+sankey <- ggplot(datSK,
       aes(y = Weight, axis1 = From, axis2 = To)) +
  geom_alluvium(aes(fill=From), width = 1/12) +
- geom_stratum(alpha=0.5,width = 1/12, color = "grey") +
- geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5) + scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
- scale_fill_viridis_d() + theme_void() + theme(axis.title.y = element_blank(),
+ geom_stratum(alpha=0,width = 1/12, color = "black") +
+ #geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5, hjust=0.9) + 
+  scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
+  scale_fill_viridis_d() + 
+  theme_void() + 
+  theme(
+    axis.title.y = element_blank(),
     axis.title.x=element_blank(),
     axis.ticks.x=element_blank(),
     axis.ticks.y=element_blank(),
     axis.text.x=element_blank(),
     axis.text.y=element_blank(),
-    legend.position="none")
-
+    legend.position="none"
+    ) + 
+  ggrepel::geom_label_repel(aes(label=From),stat="stratum",size=3,direction="x",hjust=10) +
+  ggrepel::geom_label_repel(aes(label=To),stat="stratum",size=3,direction="y",nudge_x = 0.5) +
+  geom_label(aes(label=Weight),stat="stratum",alpha=0.8)
+  
+  
+  
+sankey <- set_panel_size(sankey,
+                          width  = unit(18, "cm"),
+                          height = unit(10, "cm"))
+grid.newpage()
+grid.draw(sankey)
 
 
 ```
@@ -236,16 +205,16 @@ colnames(topAffTopics)
 
 datSK <- data.frame(From=c(as.character(topAffTopics$affiliation)),To=(as.character(topAffTopics$topic)),Weight=topAffTopics$count)
 
-# Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
-#                      options=list(
-#                        sankey="{link: {color: { fill: '#871b47' } },
-#                             node: { color: { fill: '#2A5E96' },
-#                             label: { color: '#000000'} }}"))
-# plot(Sankey)
-# 
-# library(ggalluvial)
-# is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
-# 
+Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
+                     options=list(
+                       sankey="{link: {color: { fill: '#871b47' } },
+                            node: { color: { fill: '#2A5E96' },
+                            label: { color: '#000000'} }}"))
+plot(Sankey)
+
+library(ggalluvial)
+is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
+
 
 ggplot(datSK,
       aes(y = Weight, axis1 = From, axis2 = To)) +
