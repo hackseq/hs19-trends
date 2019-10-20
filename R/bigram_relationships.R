@@ -7,6 +7,7 @@ library(ggplot2)
 library(ggraph)
 library(readr)
 library(tidygraph)
+library(viridis)
 
 
 # Read in data
@@ -64,15 +65,27 @@ word_cors <- df3 %>%
   top_n(100, Freq) %>% 
   separate(Var1, c("item1", "item2"))
 
+wordList <- c(word_cors$item1, word_cors$item2) %>% unique()
 
-word_cors %>%
-  graph_from_data_frame() %>%
+wordListToken <- df %>%
+  unnest_tokens(bigrams, abstract_clean, token = "ngrams", n = 1) 
+wordListTokenDF <- as.data.frame(table(wordListToken$bigrams)) %>% 
+  arrange(desc(Freq)) %>%
+  filter(Var1 %in% wordList)
+
+names(wordListTokenDF)[2] <- "Term_Frequency"
+names(word_cors)[3] <- "Edge_Frequency"
+
+graph_from_data_frame(vertices =  wordListTokenDF, d = word_cors) ->graphHold
+
+graphHold %>%
   ggraph(layout = "fr") +
-  geom_edge_link(aes(edge_alpha = Freq), show.legend = TRUE) +
-  geom_node_point(color = "lightblue", alpha = 0.5, size = 5) +
+  geom_edge_link(aes(edge_alpha = Edge_Frequency), show.legend = TRUE) +
+  geom_node_point(aes(color = Term_Frequency, size = Term_Frequency), alpha = 0.7) +
   scale_fill_viridis_c() +
   geom_node_text(aes(label = name), repel = TRUE) +
-  theme_void()
+  scale_color_viridis_c(direction = -1) +
+  theme_void() + guides(size=FALSE)
 }
 
 ### Execute function
