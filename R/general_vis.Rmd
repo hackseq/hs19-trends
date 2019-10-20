@@ -1,5 +1,5 @@
 ---
-title: "general_vis_sequencing_racingbar"
+title: "General Visualizations"
 author: "Jasmine and Diana"
 date: "20/10/2019"
 output: html_document
@@ -12,15 +12,65 @@ library(plotly)
 library(cowplot)
 library(tidyverse)
 library(gganimate)
+library(fulltext)
 ```
 
-```{r load files, include=FALSE}
+```{r searchterms, include=FALSE}
+search <- read_csv("../raw-data/SearchTerms.csv")
+```
+
+```{r, include=FALSE}
+dist_t <- search %>% 
+  group_by(Topic) %>% 
+  summarise(`total terms` = n())
+
+n_topic <- nrow(dist_t)
+```
+## Bioinformatic Topics
+We have identified `r n_topic` major topics in Bioinformatics. Within each topic we used up to 3 search terms in `r n_db`
+
+# Article data from Webscraping
+```{r API keys}
+Sys.setenv(ELSEVIER_SCOPUS_KEY = '3da3a9477a6e0a7fefc0bbfb49f288f5', SPRINGER_KEY = 'dc293398c185c33d930865ae1fd6eae3', ENTREZ_KEY = "1621b309cd4dab23f28c432d4e7baa76d909" )
+```
+
+##FIX THIS
+##Selecting relevant databases for fulltext 
+We compared search engines like BioMed Central (BMC), Scopus, and PLoS
+
+We have compared our 
+```{r webscrape db}
+databaseList <- ft_search_ls()
+databaseList <- databaseList[!databaseList %in% c("bmc","scopus","entrez")]
+n_db <- length(databaseList)
+
+# ft_links() - get links for articles (xml and pdf).
+resFound <- NULL
+
+st <- "Genbank"
+st <- "bioinformatics databases"
+res1 <- ft_search(query = st, from = databaseList, limit = 10)
+
+for(nm in length(res1)){
+  Found <- res1[[nm]][["found"]]
+  if(!is.null(Found)){
+  resFound <- bind_rows(resFound,data.frame(db=nm,found=Found,searchTerm=st))}
+}
+
+resFound
+```
+
+```{r load  all webscraping data}
+df_all <- read_csv("../data/AllWebscrape.csv")
+```
+
+```{r load sequencing data, include=FALSE}
 # Load data for all 7 sequencing types
 seq_spec <- read_csv("../data/sequencing-specific.csv")
 ```
 
 ## Racing Bar Graphs
-```{r}
+```{r, include=FALSE}
 seq_data <- seq_spec %>% 
   filter(topic != "NGS",
          topic != "third-generation sequencing",
@@ -32,8 +82,7 @@ seq_data <- seq_spec %>%
   ungroup()
 ```
 
-###
-```{r ordering racing bars}
+```{r ordering racing bars, INCLUDE = FALSE}
 ordered_df <- NULL
 
 for (yr in 2003:2019) {
@@ -46,7 +95,8 @@ for (yr in 2003:2019) {
 }
 ```
 
-```{r racing bars}
+The data is limited to the establishment of PLoS in 2003
+```{r racing bars animate, include=FALSE}
 p <- ordered_df %>% 
   ggplot(aes(ordering, group = topic))+
   geom_tile(aes(y = cum_total/2,
@@ -57,20 +107,23 @@ p <- ordered_df %>%
   scale_fill_viridis_d() +
   coord_cartesian(clip = "off", expand = FALSE) +
   coord_flip() +
-  transition_states(Year, transition_length = 4, state_length = 8) +
+#animate
+  transition_states(Year, transition_length = 8, state_length = 4, wrap = FALSE) +
   ease_aes("cubic-in-out") +
-  labs(title = "Year {closest_state}") +
+  view_step(pause_length = 2, step_length = 1, nsteps = 3, wrap = FALSE) +
+#aesthetics
+  labs(title = "Year {closest_state}", y = "cumulative total papers") +
   theme(legend.position = "none",
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank(),
         text = element_text(size=14),
         plot.title = element_text(size = 35)) +
   ylim(0,1300) +
-  xlab("")
+  xlab("") 
 
 #rendering the animation
 animate(p, nframes = 750, 
-        fps = 10, 
+        fps = 20, 
         end_pause = 10)
 ```
 
