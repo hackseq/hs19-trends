@@ -135,7 +135,7 @@ ggplot(datSK,
 
 
 ```
-```{r} P
+```{r} 
 level <- read.csv("C:/Users/ellio/Desktop/hs19-trends/raw-data/SearchTerms.csv")
 level %<>% na.omit()
 colnames(topAuthorTopics)[2] <- c("Term")
