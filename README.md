@@ -44,6 +44,26 @@ These are the R Packages needed:
 * `sf`
 * `ggmap`
 * `maptools`
+* `igraph`
+* `ggraph`
+* `tm`
+* `gganimate`
+* `data.table`
+* `textrank`
+* `udpipe`
+* `tidytext`
+* `ggplot2`
+* `magriter`
+* `plotly`
+* `googleVis`
+* `ggrepel`
+* `egg`
+* `grid`
+* `ggalluvial`
+* `widyr`
+* `readr`
+* `tidygraph`
+
 
 These are the Python (`python3`) packages needed:
 * `googlemaps`
