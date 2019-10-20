@@ -1,20 +1,55 @@
-library(future)
-library(fulltext)
-library(pubchunks)
-library(tidyverse)
-library(magrittr)
-library(dplyr)
-library(purrr)
-library(here)
-library(lubridate)
+#!/usr/bin/env Rscript
 
+if (!require(future)) {
+	install.packages("future")
+}
+library(future)
+
+if (!require(fulltext)) {
+	install.packages("fulltext")
+}
+library(fulltext)
+
+if (!require(pubchunks)) {
+	install.packages("pubchunks")
+}
+library(pubchunks)
+
+if (!require(tidyverse)) {
+	install.packages("tidyverse")
+}
+library(tidyverse)
+
+if (!require(magrittr)) {
+	install.packages("magrittr")
+}
+library(magrittr)
+
+if (!require(purrr)) {
+	install.packages("purrr")
+}
+library(purrr)
+
+if (!require(here)) {
+	install.packages("here")
+}
+library(here)
+
+if (!require(lubridate)) {
+	install.packages("lubridate")
+}
+
+library(lubridate)
 ##specify that here is here::here because of conflict with lubridate
 here <- here::here
 plan(multisession)
 
+args = commandArgs(trailingOnly = FALSE)
+
+
 searchTerms <- read_csv(here("/raw-data/SearchTerms.csv"))
 searchTerms$Term %<>% as.character()
-searchTerms <- searchTerms %>% filter(Topic=="Sequence Alignment")
+searchTerms <- searchTerms %>% filter(Topic==args)
 
 # ft_links() - get links for articles (xml and pdf).
 df_raw <- NULL
@@ -57,4 +92,4 @@ df_raw_refined %<>% select(-c("history.received", "journal_meta.journal.id", "jo
 
 summaryDOI <- df_raw_refined %>% group_by(doi) %>% summarise_all(function(x)(n_distinct(x)))
 
-write_csv(df_raw_refined, here::here("data","localalignment.csv"))
+write_csv(df_raw_refined, here::here("data","test","localalignment.csv"))
