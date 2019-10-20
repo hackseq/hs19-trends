@@ -1,0 +1,314 @@
+---
+title: "Overview"
+author: "Diana Lin"
+date: "20/10/2019"
+output: 
+  html_document:
+    toc: true
+    theme: paper
+---
+
+```{r setup, include=FALSE, warning = FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = FALSE, message = FALSE, warning = FALSE, fig.width=12, fig.height=8)
+```
+
+## Set Up
+Load all the necessary packages:
+```{r load, warning= FALSE, message = FALSE}
+library(future)
+library(fulltext)
+library(pubchunks)
+library(tidyverse)
+library(magrittr)
+library(dplyr)
+library(purrr)
+library(here)
+library(lubridate)
+library(plotly)
+library(scales)
+library(stringr)
+```
+
+## Overview of Hits by Topic
+
+Load all the search terms:
+```{r}
+searchTerms <- read_csv(here::here("/raw-data/SearchTerms.csv"))
+searchTerms$Term %<>% as.character()
+# searchTerms <- searchTerms %>% filter(Topic=="Sequence Alignment")
+```
+
+Set API keys:
+```{r API keys, echo = FALSE}
+Sys.setenv(ELSEVIER_SCOPUS_KEY = '3da3a9477a6e0a7fefc0bbfb49f288f5', SPRINGER_KEY = 'dc293398c185c33d930865ae1fd6eae3', ENTREZ_KEY = "1621b309cd4dab23f28c432d4e7baa76d909" )
+```
+
+Search for all search terms across all databases:
+```{r overview}
+resFound <- NULL
+
+databaseList <- ft_search_ls()
+# databaseList <- databaseList[!databaseList %in% c("bmc","scopus","entrez")]
+
+for (t in unique(searchTerms$Topic)) {
+    specific <- searchTerms %>% filter(Topic == t)
+  for (st in specific$Term) {
+    res1 <- ft_search(query = st,
+                      from = databaseList,
+                      limit = 10)
+    
+    for (nm in names(res1)) {
+      Found <- res1[[nm]][["found"]]
+      if (is.null(Found)) {
+        Found <- 0
+      }
+      resFound <-
+        bind_rows(resFound, data.frame(
+          db = nm,
+          found = Found,
+          searchTerm = st,
+          topic = t
+        ))
+    }
+  }
+}
+
+resFound[resFound == 0] <- NA
+resFound <- resFound %>% drop_na()
+
+overview <- resFound %>%
+  group_by(topic, db) %>%
+  summarize(sum = sum(found)) %>%
+  ggplot(aes(x = topic, y = sum)) +
+  geom_col(aes(fill = db)) + 
+  theme(axis.text.x = element_text(angle = 30),
+        text = element_text(size = 20),
+        axis.title = element_text(size =18),
+        axis.text = element_text(size=12)
+        ) +
+  scale_y_continuous(label = scales::comma_format()) +
+  labs(title = "Topic Overview Across Databases", y = "# Papers Found", x = "Topic", fill = "Database")
+```
+
+```{r, echo = FALSE}
+print(overview)
+```
+
+```{r, echo = FALSE}
+ggsave(here::here("figures", "overview.pdf"), height = 8, width =12, device = "pdf")
+```
+
+## Breakdown of Topic By Search Term
+
+Plot the specific breakdowns in each topic:
+```{r overview topic}
+for (specific_topic in unique(searchTerms$Topic)) {
+print(resFound %>%
+  filter(topic == specific_topic) %>%
+  mutate(searchTerm = str_replace_all(searchTerm, " ", "\n")) %>%
+  group_by(searchTerm, db) %>%
+  summarize(sum=sum(found)) %>%
+  ggplot(aes(x = searchTerm, y = sum)) +
+  geom_col(aes(fill = db)) +
+  labs(title = specific_topic, y = "# Papers Found", x = "Search Terms", fill = "Database") +
+  theme(text = element_text(size = 20),
+        axis.title = element_text(size =18),
+        axis.text = element_text(size=12),
+       # axis.text.x = element_text(angle=20)
+        ) +
+    scale_y_continuous(label = scales::comma_format()))
+}
+```
+
+### Breakdown of **Sequencing** By Search Term
+
+Sequencing (specific):
+```{r}
+specific_topic <- "Sequencing"
+resFound <- NULL
+
+searchTerms <- read_csv(here::here("/raw-data/sequencing-specific.csv"))
+searchTerms$Term %<>% as.character()
+
+for (st in searchTerms$Term) {
+  res1 <- ft_search(query = st,
+                    from = databaseList,
+                    limit = 10)
+  for (nm in names(res1)) {
+    Found <- res1[[nm]][["found"]]
+    if (is.null(Found)) {
+      Found <- 0
+    }
+    resFound <-
+      bind_rows(resFound,
+                data.frame(
+                  db = nm,
+                  found = Found,
+                  searchTerm = st,
+                  topic = specific_topic
+                ))
+  }
+}
+
+resFound[resFound == 0] <- NA
+resFound <- resFound %>% drop_na()
+
+sequencing_plot <- resFound %>%
+#  filter(topic == specific_topic) %>%
+  filter(searchTerm != "NGS",
+       searchTerm != "third-generation sequencing",
+       searchTerm != "ont reads sequencing") %>%
+ # mutate(searchTerm = str_remove(searchTerm," sequencing")) %>%
+ # mutate(searchTerm = str_remove(searchTerm, "sequencing ")) %>%
+  mutate(searchTerm = str_remove(searchTerm, " sequencing")) %>%
+  mutate(searchTerm = str_replace_all(searchTerm, " ", "\n")) %>%
+  mutate(searchTerm = str_replace(searchTerm,"-", "\n")) %>%
+  group_by(searchTerm, db) %>%
+  summarize(sum=sum(found)) %>%
+  ggplot(aes(x = searchTerm, y = sum)) +
+  geom_col(aes(fill = db)) +
+  labs(title = specific_topic, y = "# Papers Found", x = "Search Terms", fill = "Database") +
+  theme(text = element_text(size = 20),
+        axis.title = element_text(size =18),
+        axis.text = element_text(size=12),
+        axis.text.x = element_text(angle=30)
+        ) +
+    scale_y_continuous(label = scales::comma_format())
+```
+
+```{r, echo = FALSE}
+print(sequencing_plot)
+```
+
+```{r, echo = FALSE}
+ggsave(filename = here::here("figures", "sequencing.pdf"), plot = sequencing_plot, width = 12, height = 8, device = "pdf")
+```
+
+
+### Breakdown of **Assembly** By Search Term
+
+Assembly (specific):
+```{r}
+specific_topic <- "Assembly"
+resFound <- NULL
+
+searchTerms <- read_csv(here::here("/raw-data/assembly-specific.csv"))
+searchTerms$Term %<>% as.character()
+
+for (st in searchTerms$Term) {
+  res1 <- ft_search(query = st,
+                    from = databaseList,
+                    limit = 10)
+  for (nm in names(res1)) {
+    Found <- res1[[nm]][["found"]]
+    if (is.null(Found)) {
+      Found <- 0
+    }
+    resFound <-
+      bind_rows(resFound,
+                data.frame(
+                  db = nm,
+                  found = Found,
+                  searchTerm = st,
+                  topic = specific_topic
+                ))
+  }
+}
+
+# resFound$searchTerm <- as.factor(resFound$searchTerm)
+
+resFound[resFound == 0] <- NA
+resFound <- resFound %>% drop_na()
+
+assembly_plot <- resFound %>%
+#  filter(topic == specific_topic) %>%
+ # mutate(searchTerm = str_remove(searchTerm," sequencing")) %>%
+ # mutate(searchTerm = str_remove(searchTerm, "sequencing ")) %>%
+  filter(searchTerm != "single cell assembly") %>%
+  mutate(searchTerm = str_remove(searchTerm, " assembly")) %>%
+  mutate(searchTerm = str_replace_all(searchTerm, " ", "\n")) %>%
+  mutate(searchTerm = str_replace(searchTerm,"-", "\n")) %>%
+  group_by(searchTerm, db) %>%
+  summarize(sum=sum(found)) %>%
+  ggplot(aes(x = fct_rev(fct_relevel(factor(searchTerm), levels = c("short read assembly", "long read assembly", "linked read assembly", "hybrid assembly", "scaffolding", "polishing", "single cell assembly"))), y = sum)) +
+  geom_col(aes(fill = db)) +
+  labs(title = specific_topic, y = "# Papers Found", x = "Search Terms", fill = "Database") +
+  theme(text = element_text(size = 20),
+        axis.title = element_text(size =18),
+        axis.text = element_text(size=12),
+        axis.text.x = element_text(angle=30)
+        ) +
+    scale_y_continuous(label = scales::comma_format())
+```
+
+```{r, echo = FALSE}
+print(assembly_plot)
+```
+
+```{r, echo = FALSE}
+ggsave(filename = here::here("figures", "assembly.pdf"), plot = assembly_plot, width = 12, height = 8, device = "pdf")
+```
+
+
+### Breakdown of **Sequence Alignment** By Search Term
+Alignment (specific):
+```{r}
+specific_topic <- "Alignment"
+resFound <- NULL
+
+searchTerms <- read_csv(here::here("/raw-data/alignment-specific.csv"))
+searchTerms$Term %<>% as.character()
+
+for (st in searchTerms$Term) {
+  res1 <- ft_search(query = st,
+                    from = databaseList,
+                    limit = 10)
+  for (nm in names(res1)) {
+    Found <- res1[[nm]][["found"]]
+    if (is.null(Found)) {
+      Found <- 0
+    }
+    resFound <-
+      bind_rows(resFound,
+                data.frame(
+                  db = nm,
+                  found = Found,
+                  searchTerm = st,
+                  topic = specific_topic
+                ))
+  }
+}
+
+resFound[resFound == 0] <- NA
+resFound <- resFound %>% drop_na()
+
+alignment_plot <- resFound %>%
+#  filter(topic == specific_topic) %>%
+ # mutate(searchTerm = str_remove(searchTerm," sequencing")) %>%
+ # mutate(searchTerm = str_remove(searchTerm, "sequencing ")) %>%
+  mutate(searchTerm = str_remove(searchTerm, " alignment")) %>%
+  mutate(searchTerm = str_replace_all(searchTerm, " ", "\n")) %>%
+  mutate(searchTerm = str_replace(searchTerm,"-", "\n")) %>%
+  group_by(searchTerm, db) %>%
+  summarize(sum=sum(found)) %>%
+  ggplot(aes(x = searchTerm, y = sum)) +
+  geom_col(aes(fill = db)) +
+  labs(title = specific_topic, y = "# Papers Found", x = "Search Terms", fill = "Database") +
+  theme(text = element_text(size = 20),
+        axis.title = element_text(size =18),
+        axis.text = element_text(size=12),
+        axis.text.x = element_text(angle=30)
+        ) +
+    scale_y_continuous(label = scales::comma_format())
+```
+
+```{r, echo = FALSE}
+print(alignment_plot)
+```
+
+
+```{r, echo = FALSE}
+ggsave(filename = here::here("figures", "alignment.pdf"), plot = alignment_plot, width = 12, height = 8, device = "pdf")
+```
+
+
