@@ -60,7 +60,7 @@ Three different types of information will be plotted
 1. General summary plots of topic coverage over time and topic coverage based on journal.
 1. Analysis of bigrams (combinations of two words) used in publications to see common phrases and their relationships. Also looking to connect the authors and their subject matters using a sankey diagram. 
 1. Geographic mapping of insitutions involved in bioinformatic research. The file being used to generate visualizations [`R/visualization_map.Rmd`](https://github.com/hackseq/hs19-trends/blob/master/R/visualization_map.Rmd)
-..1. Dynamic heatmaps generated with colours based on the number of active insitutions in the area. The maps provide global view, as well as specific USA and European maps due to the high number of results in those areas. Hovering over the countries/states shows the number of institutions and hovering over the points (where shown) identifies the institutions.
-..1. An interactive world map showing the most used keywords in each country. Hovering over the countries shows the topic names.
+    * Dynamic heatmaps generated with colours based on the number of active insitutions in the area. The maps provide global view, as well as specific USA and European maps due to the high number of results in those areas. Hovering over the countries/states shows the number of institutions and hovering over the points (where shown) identifies the institutions.
+    * An interactive world map showing the most used keywords in each country. Hovering over the countries shows the topic names.
 
 
