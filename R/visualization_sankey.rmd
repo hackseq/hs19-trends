@@ -1,12 +1,12 @@
 ---
-title: "TextRank"
-author: "Lucia Darrow"
+title: "Sankey Diagrams"
+author: "Elliot YKF, Lucia Darrow"
 date: "October 19, 2019"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning = FALSE)
 ```
 
 ```{r libraries}
@@ -15,7 +15,6 @@ library(data.table)
 library(textrank)
 library(udpipe)
 library(dplyr)
-library(topicmodels)
 library(tm)
 library(tidytext)
 library(stringr)
@@ -25,63 +24,42 @@ library(plotly)
 library(tidyverse)
 library(googleVis)
 library(ggrepel)
-
 library(egg)
 library(grid)
+library(ggalluvial)
+
 ```
 
 
+Read in the webscraped data and identify the top authors by publication count.
 
-
-```{r}
+```{r import}
 
 All <- read_csv("../data/AllWebscrape.csv")
+All %>% group_by(author1,topic) %>% 
+  summarise(count=n()) %>% 
+  na.omit() %>% 
+  arrange(desc(count)) -> authorTopic
 
-All %>% group_by(author1,topic) %>% summarise(count=n()) %>% na.omit() %>% arrange(desc(count)) -> authorTopic
-
+# Remove NA values 
 authorTopic %<>% na.omit() -> authorTopic
-
 authorTopic <- authorTopic[authorTopic$author1!="NA, NA",]
 
-authorTopic %>% group_by(author1) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> TopAuthors
+# Get dataframe of the top authors and how many publications are from each topic area
+authorTopic %>% 
+  group_by(author1) %>% 
+  summarise(count=sum(count)) %>% 
+  arrange(desc(count)) -> TopAuthors
 
-authorTopic %>% filter(author1 %in% TopAuthors[1:10,]$author1) -> topAuthorTopics
+authorTopic %>% 
+  filter(author1 %in% TopAuthors[1:10,]$author1) -> topAuthorTopics
 ```
 
 
+Use the master search term file to get the list of topics to which each search term belongs. We will use the higher level topics for plotting in place of specific search terms.
 
-```{r}
-
-datSK <- data.frame(From=c(as.character(topAuthorTopics$author1)),To=(as.character(topAuthorTopics$topic)),Weight=topAuthorTopics$count)
-# 
-# Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
-#                      options=list(
-#                        sankey="{link: {color: { fill: '#871b47' } },
-#                             node: { color: { fill: '#2A5E96' },
-#                             label: { color: '#000000'} }}"))
-# plot(Sankey)
-# 
-# library(ggalluvial)
-# is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
-
-
-ggplot(datSK,
-      aes(y = Weight, axis1 = From, axis2 = To)) +
- geom_alluvium(aes(fill=From), width = 1/12) +
- geom_stratum(alpha=0.5,width = 1/12, color = "grey") +
- geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5) + scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
- scale_fill_viridis_d() + theme_bw() + theme(axis.title.y = element_blank(),
-    axis.title.x=element_blank(),
-    axis.ticks.x=element_blank(),
-    axis.ticks.y=element_blank(),
-    axis.text.x=element_blank(),
-    axis.text.y=element_blank(),
-    legend.position="bottom")
-
-
-```
-```{r} 
-level <- read.csv("C:/Users/ellio/Desktop/hs19-trends/raw-data/SearchTerms.csv")
+```{r, getTopics} 
+level <- read.csv("../raw-data/SearchTerms.csv")
 level %<>% na.omit()
 colnames(topAuthorTopics)[2] <- c("Term")
 level$Term <- as.character(level$Term)
@@ -95,30 +73,20 @@ topAuthorTopics %>% group_by(author1,Topic) %>% summarise(count=sum(count)) %>% 
 unique(as.character(topAuthorTopics$Topic))
 ```
 
+Next, set up a Sankey flow diagram to display authors on the LHS (source) and topics on the RHS (sink). The weight of each connection represents the number of publications.
 
+```{r, authorSankey}
 
+datSK <- data.frame(From=c(as.character(topAuthorTopics$author1)),
+                    To=(as.character(topAuthorTopics$Topic)),
+                    Weight=topAuthorTopics$count)
 
-
-```{r}
-
-datSK <- data.frame(From=c(as.character(topAuthorTopics$author1)),To=(as.character(topAuthorTopics$Topic)),Weight=topAuthorTopics$count)
-
-
-datSK %>% group_by(From) %>% summarise(count=sum(Weight)) -> pubByAuthor
+# Joing to the publications by topic by author to get higher level publication counts
+datSK %>% group_by(From) %>% 
+  summarise(count=sum(Weight)) -> pubByAuthor
 datSK <- left_join(datSK,pubByAuthor,by="From")
-# datSK$From <- paste(datSK$From,datSK$count, sep=" | ")
 
-# Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
-#                      options=list(
-#                        sankey="{link: {color: { fill: '#871b47' } },
-#                             node: { color: { fill: '#2A5E96' },
-#                             label: { color: '#000000'} }}"))
-# plot(Sankey)
-# 
-# library(ggalluvial)
-# is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
-
-
+# Plot the sankey diagram using ggplot framework
 sankey <- ggplot(datSK,
       aes(y = Weight, axis1 = From, axis2 = To)) +
  geom_alluvium(aes(fill=From), width = 1/12) +
@@ -150,40 +118,7 @@ grid.draw(sankey)
 
 
 ```
-[1] "Genome Annotation"     "Databases"             "Structural Prediction" "Assembly "            
- [5] "Sequence Alignment "   "Sequencing"            "Gene Expression"       "Phylogenetics"        
- [9] "Variant Calling "      "Epigenetics"  
-```{r}
 
-topAuthorTopics$Topic <- factor(topAuthorTopics$Topic,levels=c("Databases", "Assembly ","Sequencing", "Sequence Alignment ","Structural Prediction","Genome Annotation","Gene Expression","Epigenetics","Phylogenetics","Variant Calling "))
-
-datSK <- data.frame(From=c(as.character(topAuthorTopics$author1)),To=((topAuthorTopics$Topic)),Weight=topAuthorTopics$count)
-
-# Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
-#                      options=list(
-#                        sankey="{link: {color: { fill: '#871b47' } },
-#                             node: { color: { fill: '#2A5E96' },
-#                             label: { color: '#000000'} }}"))
-# plot(Sankey)
-# 
-# library(ggalluvial)
-# is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
-
-
-ggplot(datSK,
-      aes(y = Weight, axis1 = From, axis2 = To)) +
- geom_alluvium(aes(fill=From), width = 1/12) +
- geom_stratum(alpha=0.5,width = 1/12, color = "grey") +
- geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5) + scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
- scale_fill_viridis_d() + theme_bw() + theme(axis.title.y = element_blank(),
-    axis.title.x=element_blank(),
-    axis.ticks.x=element_blank(),
-    axis.ticks.y=element_blank(),
-    axis.text.x=element_blank(),
-    axis.text.y=element_blank(),
-    legend.position="none")
-
-```
 
 
 ```{r}
@@ -201,6 +136,8 @@ affTopic %>% group_by(affiliation) %>% summarise(count=sum(count)) %>% arrange(d
 affTopic %>% filter(affiliation %in% TopAff[1:10,]$affiliation) -> topAffTopics
 colnames(topAffTopics)
 ```
+
+
 ```{r}
 
 datSK <- data.frame(From=c(as.character(topAffTopics$affiliation)),To=(as.character(topAffTopics$topic)),Weight=topAffTopics$count)
