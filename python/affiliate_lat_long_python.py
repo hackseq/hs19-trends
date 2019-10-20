@@ -9,11 +9,12 @@ import googlemaps
 import pandas as pd
 
 
-aff_data=pd.read_csv("affilate_address.csv")
+aff_data=pd.read_csv("AllWebscrape.csv")
 aff_list=aff_data['affiliation'].tolist()
+#%%%%
+gmaps=googlemaps.Client(key="AIzaSyC3jCkodWM4lwGaA1zOWFBGjUZRBgVppkc")
 
-gmaps=googlemaps.Client(key="YOUR KEY HERE")
-
+#test_list=["Simon Fraser University","University of British Columbia"]
 latlong_list= []
 
 
@@ -24,7 +25,10 @@ for aff in aff_list:
         latlong_list.append(lat_long)
     except: 
         latlong_list.append("NA")
-#%%%%
+        
+
+
+
         
 aff_data['latlong']=latlong_list
 aff_data.to_csv("affiliations_lat_long.csv")
