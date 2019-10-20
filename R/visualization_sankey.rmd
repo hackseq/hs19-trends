@@ -1,0 +1,265 @@
+---
+title: "TextRank"
+author: "Lucia Darrow"
+date: "October 19, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries}
+
+library(data.table)
+library(textrank)
+library(udpipe)
+library(dplyr)
+library(topicmodels)
+library(tm)
+library(tidytext)
+library(stringr)
+library(ggplot2)
+library(magrittr)
+library(plotly)
+library(googleVis)
+```
+
+
+```{r import}
+
+termResults <- read.csv("C:/Users/ellio/Desktop/hs19-trends/data/WebscrapeTopic/NGS.csv")
+termResults2019 <- termResults %>% filter(Year == 2019)
+```
+
+
+```{r textRank}
+
+abstract <- termResults2019$abstract %>%
+  as.character() %>%
+  na.omit()
+
+
+```
+```{r}
+
+#abstract <- paste0(abstract, '.')
+#abstract <- gsub("[.][.]",".", abstract)
+
+#abstract <- paste(abstract, collapse = "\n")
+stopwords_regex = paste(stopwords('en'),collapse='\\b|\\b')
+stopwords_regex = paste0('\\b',stopwords_regex,'\\b')
+documents = str_replace_all(abstract,stopwords_regex,"")
+
+tt <- DocumentTermMatrix(Corpus(VectorSource(documents)))
+lda <- LDA(tt,k=2,control=list(seed=1))
+tidy <- tidy(lda,matrix="beta")
+
+tidy %>% group_by(topic) %>% top_n(30,beta) %>% ungroup() %>% arrange(topic,-beta)
+```
+
+```{r}
+# Sentiment
+# get_nrc_sentiment(perfectClub)
+
+ud_model <- udpipe_download_model(language = "english")
+ud_model <- udpipe_load_model(ud_model$file_model)
+titles <- udpipe_annotate(ud_model, x = titles)
+titles <- as.data.frame(titles)
+
+keyw <- textrank_keywords(titles$lemma,
+                          relevant = titles$upos %in% c("NOUN", "VERB", "ADJ"))
+subset(keyw$keywords, ngram > 1 & freq > 1)
+
+titles$textrank_id <- unique_identifier(titles, c("doc_id", "paragraph_id", "sentence_id"))
+sentences <- unique(titles[, c("textrank_id", "sentence")])
+terminology <- subset(titles, upos %in% c("NOUN", "ADJ"))
+terminology <- terminology[, c("textrank_id", "lemma")]
+
+tr <- textrank_sentences(data = sentences, terminology = terminology)
+
+s <- summary(tr, n = 15, keep.sentence.order = TRUE)
+s %<>% as.data.frame()
+
+```
+
+```{r}
+
+All <- fread("C:/Users/ellio/Desktop/hs19-trends/data/AllWebscrape.csv")
+colnames(All)
+
+
+All %>% group_by(author1,topic) %>% summarise(count=n()) %>% na.omit() %>% arrange(desc(count)) -> authorTopic
+
+authorTopic %<>% na.omit() -> authorTopic
+
+authorTopic <- authorTopic[authorTopic$author1!="NA, NA",]
+
+authorTopic %>% group_by(author1) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> TopAuthors
+
+authorTopic %>% filter(author1 %in% TopAuthors[1:10,]$author1) -> topAuthorTopics
+unique(topAuthorTopics$topic)
+```
+
+
+
+```{r}
+
+datSK <- data.frame(From=c(as.character(topAuthorTopics$author1)),To=(as.character(topAuthorTopics$topic)),Weight=topAuthorTopics$count)
+
+Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
+                     options=list(
+                       sankey="{link: {color: { fill: '#871b47' } },
+                            node: { color: { fill: '#2A5E96' },
+                            label: { color: '#000000'} }}"))
+plot(Sankey)
+
+library(ggalluvial)
+is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
+
+
+ggplot(datSK,
+      aes(y = Weight, axis1 = From, axis2 = To)) +
+ geom_alluvium(aes(fill=From), width = 1/12) +
+ geom_stratum(alpha=0.5,width = 1/12, color = "grey") +
+ geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5) + scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
+ scale_fill_viridis_d() + theme_bw() + theme(axis.title.y = element_blank(),
+    axis.title.x=element_blank(),
+    axis.ticks.x=element_blank(),
+    axis.ticks.y=element_blank(),
+    axis.text.x=element_blank(),
+    axis.text.y=element_blank(),
+    legend.position="bottom")
+
+
+
+
+```
+```{r} 
+level <- read.csv("C:/Users/ellio/Desktop/hs19-trends/raw-data/SearchTerms.csv")
+level %<>% na.omit()
+colnames(topAuthorTopics)[2] <- c("Term")
+level$Term <- as.character(level$Term)
+level$Term <- trimws(level$Term,"l")
+topAuthorTopics$Term <- as.character(topAuthorTopics$Term)
+
+topAuthorTopics$Term <- str_replace_all(topAuthorTopics$Term, " sequence","")
+topAuthorTopics <- left_join(topAuthorTopics,level,by= "Term")
+
+topAuthorTopics %>% group_by(author1,Topic) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> topAuthorTopics
+unique(as.character(topAuthorTopics$Topic))
+```
+
+```{r}
+
+datSK <- data.frame(From=c(as.character(topAuthorTopics$author1)),To=(as.character(topAuthorTopics$Topic)),Weight=topAuthorTopics$count)
+
+Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
+                     options=list(
+                       sankey="{link: {color: { fill: '#871b47' } },
+                            node: { color: { fill: '#2A5E96' },
+                            label: { color: '#000000'} }}"))
+plot(Sankey)
+
+library(ggalluvial)
+is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
+
+
+ggplot(datSK,
+      aes(y = Weight, axis1 = From, axis2 = To)) +
+ geom_alluvium(aes(fill=From), width = 1/12) +
+ geom_stratum(alpha=0.5,width = 1/12, color = "grey") +
+ geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5) + scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
+ scale_fill_viridis_d() + theme_void() + theme(axis.title.y = element_blank(),
+    axis.title.x=element_blank(),
+    axis.ticks.x=element_blank(),
+    axis.ticks.y=element_blank(),
+    axis.text.x=element_blank(),
+    axis.text.y=element_blank(),
+    legend.position="none")
+
+
+
+```
+[1] "Genome Annotation"     "Databases"             "Structural Prediction" "Assembly "            
+ [5] "Sequence Alignment "   "Sequencing"            "Gene Expression"       "Phylogenetics"        
+ [9] "Variant Calling "      "Epigenetics"  
+```{r}
+
+topAuthorTopics$Topic <- factor(topAuthorTopics$Topic,levels=c("Databases", "Assembly ","Sequencing", "Sequence Alignment ","Structural Prediction","Genome Annotation","Gene Expression","Epigenetics","Phylogenetics","Variant Calling "))
+
+datSK <- data.frame(From=c(as.character(topAuthorTopics$author1)),To=((topAuthorTopics$Topic)),Weight=topAuthorTopics$count)
+
+# Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
+#                      options=list(
+#                        sankey="{link: {color: { fill: '#871b47' } },
+#                             node: { color: { fill: '#2A5E96' },
+#                             label: { color: '#000000'} }}"))
+# plot(Sankey)
+# 
+# library(ggalluvial)
+# is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
+
+
+ggplot(datSK,
+      aes(y = Weight, axis1 = From, axis2 = To)) +
+ geom_alluvium(aes(fill=From), width = 1/12) +
+ geom_stratum(alpha=0.5,width = 1/12, color = "grey") +
+ geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5) + scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
+ scale_fill_viridis_d() + theme_bw() + theme(axis.title.y = element_blank(),
+    axis.title.x=element_blank(),
+    axis.ticks.x=element_blank(),
+    axis.ticks.y=element_blank(),
+    axis.text.x=element_blank(),
+    axis.text.y=element_blank(),
+    legend.position="none")
+
+```
+
+
+```{r}
+All %>% group_by(affiliation,topic) %>% summarise(count=n()) %>% arrange(desc(count)) -> affTrends
+affTrends %<>% na.omit() -> affTrends
+
+All %>% group_by(affiliation,topic) %>% summarise(count=n()) %>% na.omit() %>% arrange(desc(count)) -> affTopic
+
+affTopic %<>% na.omit() -> affTopic
+
+# affTopic <- affTopic[affTopic$affiliation!="NA, NA",]
+
+affTopic %>% group_by(affiliation) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> TopAff
+
+affTopic %>% filter(affiliation %in% TopAff[1:10,]$affiliation) -> topAffTopics
+colnames(topAffTopics)
+```
+```{r}
+
+datSK <- data.frame(From=c(as.character(topAffTopics$affiliation)),To=(as.character(topAffTopics$topic)),Weight=topAffTopics$count)
+
+# Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight",
+#                      options=list(
+#                        sankey="{link: {color: { fill: '#871b47' } },
+#                             node: { color: { fill: '#2A5E96' },
+#                             label: { color: '#000000'} }}"))
+# plot(Sankey)
+# 
+# library(ggalluvial)
+# is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE)
+# 
+
+ggplot(datSK,
+      aes(y = Weight, axis1 = From, axis2 = To)) +
+ geom_alluvium(aes(fill=From), width = 1/12) +
+ geom_stratum(alpha=0.5,width = 1/12, color = "grey") +
+ geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5) + scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
+ scale_fill_viridis_d() + theme_void() + theme(axis.title.y = element_blank(),
+    axis.title.x=element_blank(),
+    axis.ticks.x=element_blank(),
+    axis.ticks.y=element_blank(),
+    axis.text.x=element_blank(),
+    axis.text.y=element_blank(),
+    legend.position="none")
+
+
+
+```
