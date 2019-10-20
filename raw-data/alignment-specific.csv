@@ -1,0 +1,9 @@
+Topic,Term
+Sequence Alignment,short read alignment
+Sequence Alignment,long read alignment
+Sequence Alignment,spliced alignment
+Sequence Alignment,gapped alignment
+Sequence Alignment,multiple sequence alignment
+Sequence Alignment,pairwise alignment
+Sequence Alignment,global alignment
+Sequence Alignment,local alignment

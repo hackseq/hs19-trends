@@ -5,7 +5,7 @@ Sequencing,ont reads sequencing
 Sequencing,pacbio sequencing
 Sequencing,illumina sequencing
 Sequencing,capillary sequencing
-Sequencing,10x sequencing genomics
-Sequencing, NGS
-Sequencing, next-generation sequencing
-Sequencing, third-generation sequencing
+Sequencing,10x genomics sequencing
+Sequencing,NGS
+Sequencing,next-generation sequencing
+Sequencing,third-generation sequencing
