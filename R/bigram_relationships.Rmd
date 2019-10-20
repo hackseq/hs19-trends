@@ -70,7 +70,7 @@ search_terms <- read_csv("../raw-data/SearchTerms.csv") %>%
 
 Join journal and search term dataframes to get topics information by journals.
 
-The topic for *global alignment sequence* and *read alignment sequence* is hard coded because the corresponding information in the search terms dataframe does not have the word "sequence", the topic could not be joined by matching search terms.
+The topic for *global alignment sequence* and *read alignment sequence* is hard coded because the corresponding information in the search terms dataframe does not have the word "sequence", the topic cannot be joined by matching search terms.
 ```{r Transform Data, results='hide'}
 df <- df_raw %>% 
   left_join(search_terms, by = "term") %>% 
@@ -79,7 +79,7 @@ df <- df_raw %>%
                         ,topic))
 ```
 
-
+Journals information is divided into 10 dataframes by topics. Visualizations can now we created by topic.
 ```{r Separate Data by Topics, results='hide'}
 df_assembly <- df %>% 
   filter(topic == "Assembly")
@@ -103,6 +103,7 @@ df_varcall <- df %>%
   filter(topic == "Variant Calling")
 ```
 
+Create bigram plots to visualize the relationships between two words. The darker lines represent higher frequency of occurrence.
 ```{r Create Bigram Plots}
 visualize_bigrams(df,abstract)
 visualize_bigrams(df_assembly, abstract)
