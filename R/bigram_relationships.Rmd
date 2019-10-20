@@ -37,17 +37,32 @@ visualize_bigrams <- function(df_name, textfield){
     # Visualizations
     df_top_bigrams <- df_freq %>%
       top_n(100, Freq) %>% 
-      separate(Var1, c("item1", "item2"))
+      separate(Var1, c("word1", "word2"))
     
-    df_top_bigrams %>%
-      graph_from_data_frame() %>%
+    top_bigram_words <- c(df_top_bigrams$word1, df_top_bigrams$word2) %>%
+      unique()
+    
+    word_list <- df_cleaned %>%
+      unnest_tokens(words, textfield_clean, token = "ngrams", n = 1) 
+    
+    df_word_list <- as.data.frame(table(word_list$words)) %>% 
+      arrange(desc(Freq)) %>%
+      filter(Var1 %in% top_bigram_words)
+    
+    names(df_word_list)[2] <- "Term_Frequency"
+    names(df_top_bigrams)[3] <- "Edge_Frequency"
+    
+    graph_from_data_frame(vertices =  df_word_list, d = df_top_bigrams) -> graph_hold
+    
+    graph_hold %>%
       ggraph(layout = "fr") +
-      geom_edge_link(aes(edge_alpha = Freq), show.legend = TRUE) +
-      geom_node_point(color = "lightblue", alpha = 0.5, size = 5) +
+      geom_edge_link(aes(edge_alpha = Edge_Frequency), show.legend = TRUE) +
+      geom_node_point(aes(color = Term_Frequency, size = Term_Frequency), alpha = 0.7) +
       scale_fill_viridis_c() +
       geom_node_text(aes(label = name), repel = TRUE) +
-      theme_void()
-    
+      scale_color_viridis_c(direction = -1) +
+      theme_void() + guides(size=FALSE) +
+      title(main = {{title}})
     
 }
 ```
