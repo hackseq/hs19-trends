@@ -12,7 +12,7 @@ import pandas as pd
 aff_data=pd.read_csv("AllWebscrape.csv")
 aff_list=aff_data['affiliation'].tolist()
 #%%%%
-gmaps=googlemaps.Client(key="AIzaSyC3jCkodWM4lwGaA1zOWFBGjUZRBgVppkc")
+gmaps=googlemaps.Client(key="YOURKEY")
 
 #test_list=["Simon Fraser University","University of British Columbia"]
 latlong_list= []
