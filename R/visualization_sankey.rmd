@@ -1,0 +1,284 @@
+---
+title: "Sankey Diagrams"
+author: "Elliot YKF, Lucia Darrow"
+date: "October 19, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning = FALSE)
+```
+
+```{r libraries}
+
+library(data.table)
+library(textrank)
+library(udpipe)
+library(dplyr)
+library(tm)
+library(tidytext)
+library(stringr)
+library(ggplot2)
+library(magrittr)
+library(plotly)
+library(tidyverse)
+library(googleVis)
+library(ggrepel)
+library(egg)
+library(grid)
+library(ggalluvial)
+
+```
+
+
+Read in the webscraped data and identify the top authors by publication count.
+
+```{r import}
+
+All <- read_csv("../data/AllWebscrape.csv")
+All %>% group_by(author1,topic) %>% 
+  summarise(count=n()) %>% 
+  na.omit() %>% 
+  arrange(desc(count)) -> authorTopic
+
+# Remove NA values 
+authorTopic %<>% na.omit() -> authorTopic
+authorTopic <- authorTopic[authorTopic$author1!="NA, NA",]
+
+# Get dataframe of the top authors and how many publications are from each topic area
+authorTopic %>% 
+  group_by(author1) %>% 
+  summarise(count=sum(count)) %>% 
+  arrange(desc(count)) -> TopAuthors
+
+authorTopic %>% 
+  filter(author1 %in% TopAuthors[1:10,]$author1) -> topAuthorTopics
+```
+
+
+Use the master search term file to get the list of topics to which each search term belongs. We will use the higher level topics for plotting in place of specific search terms.
+
+```{r, getTopics} 
+level <- read.csv("../raw-data/SearchTerms.csv")
+level %<>% na.omit()
+colnames(topAuthorTopics)[2] <- c("Term")
+level$Term <- as.character(level$Term)
+level$Term <- trimws(level$Term,"l")
+topAuthorTopics$Term <- as.character(topAuthorTopics$Term)
+
+topAuthorTopics$Term <- str_replace_all(topAuthorTopics$Term, " sequence","")
+topAuthorTopics <- left_join(topAuthorTopics,level,by= "Term")
+
+topAuthorTopics %>% group_by(author1,Topic) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> topAuthorTopics
+```
+
+Next, set up a Sankey flow diagram to display authors on the LHS (source) and topics on the RHS (sink). The weight of each connection represents the number of publications.
+
+```{r, authorSankey}
+
+datSK <- data.frame(From=c(as.character(topAuthorTopics$author1)),
+                    To=(as.character(topAuthorTopics$Topic)),
+                    Weight=topAuthorTopics$count)
+
+# Joing to the publications by topic by author to get higher level publication counts
+datSK %>% group_by(From) %>% 
+  summarise(count=sum(Weight)) -> pubByAuthor
+datSK <- left_join(datSK,pubByAuthor,by="From")
+
+# Plot the sankey diagram using ggplot framework
+sankey <- ggplot(datSK,
+      aes(y = Weight, axis1 = From, axis2 = To)) +
+ geom_alluvium(aes(fill=From), width = 1/12) +
+ geom_stratum(alpha=0,width = 1/12, color = "black") +
+ #geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5, hjust=0.9) + 
+  scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
+  scale_fill_viridis_d() + 
+  theme_void() + 
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x=element_blank(),
+    axis.ticks.x=element_blank(),
+    axis.ticks.y=element_blank(),
+    axis.text.x=element_blank(),
+    axis.text.y=element_blank(),
+    legend.position="none"
+    ) + 
+  ggrepel::geom_label_repel(aes(label=From),stat="stratum",size=3,direction="x",hjust=10) +
+  ggrepel::geom_label_repel(aes(label=To),stat="stratum",size=3,direction="y",nudge_x = 0.5) +
+  geom_label(aes(label=Weight),stat="stratum",alpha=0.8)
+  
+  
+  
+sankey <- set_panel_size(sankey,
+                          width  = unit(18, "cm"),
+                          height = unit(10, "cm"))
+grid.newpage()
+grid.draw(sankey)
+
+
+```
+
+
+
+```{r}
+All %>% group_by(affiliation,topic) %>% summarise(count=n()) %>% arrange(desc(count)) -> affTrends
+affTrends %<>% na.omit() -> affTrends
+
+All %>% group_by(affiliation,topic) %>% summarise(count=n()) %>% na.omit() %>% arrange(desc(count)) -> affTopic
+
+affTopic %<>% na.omit() -> affTopic
+
+# affTopic <- affTopic[affTopic$affiliation!="NA, NA",]
+
+affTopic %>% group_by(affiliation) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> TopAff
+
+affTopic %>% filter(affiliation %in% TopAff[1:10,]$affiliation) -> topAffTopics
+
+colnames(topAffTopics)[2] <- c("Term")
+
+
+topAffTopics$Term <- str_replace_all(topAffTopics$Term, " sequence","")
+
+
+topAffTopics <- left_join(topAffTopics,level,by="Term")
+
+
+topAffTopics %>% group_by(affiliation,Topic) %>% summarise(count=sum(count)) %>% arrange(desc(count)) -> topAffTopics
+
+# #Select Top 10
+# topAffTopics <- topAffTopics[1:10,]
+topAffTopics
+```
+```{r}
+topAffTopics$affiliation <- gsub('Department of ', '', topAffTopics$affiliation)
+topAffTopics$affiliation <- gsub('University of ', 'U ', topAffTopics$affiliation)
+topAffTopics$affiliation <- gsub('United States of America', 'USA', topAffTopics$affiliation)
+topAffTopics$affiliation <- gsub('University', 'U', topAffTopics$affiliation)
+
+topAffTopics$affiliation <- gsub("(.)\n.+", "\\1", topAffTopics$affiliation)
+gsub(".*, U ", "", topAffTopics$affiliation)
+
+
+topAffTopics$affiliation <-str_replace_all(topAffTopics$affiliation,",","\n") 
+topAffTopics$affiliation <- str_replace(topAffTopics$affiliation,"\n",",")
+locationAfterN <- str_locate(topAffTopics$affiliation,"\n.+")
+
+
+topAffTopics$affiliation <- str_sub(topAffTopics$affiliation,end=locationAfterN[,1]-1)
+# str_replace(topAffTopics$affiliation,"\n*+.......",",")
+topAffTopics$affiliation <-str_replace_all(topAffTopics$affiliation,",","\n") 
+topAffTopics$affiliation
+
+gsub("+.\n ", "", topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")]) 
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")]
+# 
+# locationAfterN <- str_locate(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")],"\n.+")
+# topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")] <- str_sub(topAffTopics$affiliation,end=locationAfterN[,1]-1)
+# 
+# topAffTopics$affiliation
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")]
+
+locationAfterN1 <-str_locate(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")],"\n.+")
+
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")] <- str_sub(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"U")],start=locationAfterN1[,1]+2)
+
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"California")] <- str_replace(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"California")]," California ","C ")
+
+
+
+locationAfterN3 <-str_locate(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"College")],"\n.+")
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"College")] <- str_sub(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"College")],start=locationAfterN3[,1]+2)
+
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")]
+
+locationAfterN4 <-str_locate(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")],"\n.+")
+
+
+topAffTopics$affiliation
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")]
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")]
+locationAfterN4
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")] <- str_sub(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"\n")],end=locationAfterN4[,1]-1)
+
+topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"European")] <- str_replace(topAffTopics$affiliation[str_detect(topAffTopics$affiliation,"European")],"European Molecular Biology Laborator", "EMBL")
+```
+
+
+<!-- ```{r} -->
+
+<!-- datSK <- data.frame(From=c(as.character(topAffTopics$affiliation)),To=(as.character(topAffTopics$Topic)),Weight=topAffTopics$count) -->
+
+<!-- Sankey <- gvisSankey(datSK, from="From", to="To", weight="Weight", -->
+<!--                      options=list( -->
+<!--                        sankey="{link: {color: { fill: '#871b47' } }, -->
+<!--                             node: { color: { fill: '#2A5E96' }, -->
+<!--                             label: { color: '#000000'} }}")) -->
+<!-- plot(Sankey) -->
+
+<!-- library(ggalluvial) -->
+<!-- is_alluvia_form(as.data.frame(datSK), axes = 1:3, silent = TRUE) -->
+
+
+<!-- ggplot(datSK, -->
+<!--       aes(y = Weight, axis1 = From, axis2 = To)) + -->
+<!--  geom_alluvium(aes(fill=From), width = 1/12) + -->
+<!--  geom_stratum(alpha=0.5,width = 1/12, color = "grey") + -->
+<!--  geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5) + scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) + -->
+<!--  scale_fill_viridis_d() + theme_void() + theme(axis.title.y = element_blank(), -->
+<!--     axis.title.x=element_blank(), -->
+<!--     axis.ticks.x=element_blank(), -->
+<!--     axis.ticks.y=element_blank(), -->
+<!--     axis.text.x=element_blank(), -->
+<!--     axis.text.y=element_blank(), -->
+<!--     legend.position="none") -->
+
+
+
+<!-- ``` -->
+```{r}
+datSK <- data.frame(From=c(as.character(topAffTopics$affiliation)),To=(as.character(topAffTopics$Topic)),Weight=topAffTopics$count) 
+
+datSK %>% group_by(From) %>% 
+  summarise(count=sum(Weight)) -> pubByAff
+datSK <- left_join(datSK,pubByAff,by="From")
+
+# Plot the sankey diagram using ggplot framework
+sankey <- ggplot(datSK,
+      aes(y = Weight, axis1 = From, axis2 = To)) +
+ geom_alluvium(aes(fill=From), width = 1/12) +
+ geom_stratum(alpha=0,width = 1/12, color = "black") +
+ #geom_label(stat = "stratum", label.strata = TRUE,alpha=0.5, hjust=0.9) + 
+  scale_x_discrete(limits = c("From", "To"), expand = c(0.3, 0.1)) +
+  scale_fill_viridis_d() + 
+  theme_void() + 
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x=element_blank(),
+    axis.ticks.x=element_blank(),
+    axis.ticks.y=element_blank(),
+    axis.text.x=element_blank(),
+    axis.text.y=element_blank(),
+    legend.position="none",
+    plot.title=element_text(hjust=0.5)
+    ) + 
+  ggrepel::geom_label_repel(aes(label=From),stat="stratum",size=3,direction="x",hjust=10) +
+  ggrepel::geom_label_repel(aes(label=To),stat="stratum",size=3,direction="y",nudge_x = 0.5) +
+  geom_label(aes(label=Weight),stat="stratum",alpha=0.8) + ggtitle("Top 10 Institutions Publications By Topic") 
+  
+  
+  
+sankey <- set_panel_size(sankey,
+                          width  = unit(18, "cm"),
+                          height = unit(10, "cm"))
+grid.newpage()
+grid.draw(sankey)
+
+```
+
