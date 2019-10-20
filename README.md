@@ -23,7 +23,7 @@ Graphic Visualization of trends in Bioinformatics
     * The keywords used for searching determined by terms in the EDAM ontology database and previous knowledge of the field. 
     * The keywords have been set up in [`raw-data/SearchTerms.csv`](https://github.com/hackseq/hs19-trends/blob/master/raw-data/SearchTerms.csv). We are working on optimizing the [`R/Fulltext_Workflow.Rmd`](https://github.com/hackseq/hs19-trends/blob/master/R/FullText_Workflow.Rmd) file to loop through this CSV. 
     * Due to access issues, we are only looking at papers in `plos` 
-1. Visualization of [trends] (#Visualization) in the the data with ggplot and other R visualization packages 
+1. Visualization of [trends](#visualization) in the the data with ggplot and other R visualization packages 
   
 
 ## Pre-requisites 
