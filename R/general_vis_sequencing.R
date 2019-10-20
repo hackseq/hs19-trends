@@ -72,25 +72,24 @@ p <- ordered_df %>%
                 height = cum_total,
                 width = 0.9,
                 fill = topic)) +
-  geom_text(aes(y = cum_total, label = topic, hjust = "left")) +
+  geom_text(aes(y = cum_total, label = topic), hjust = "left", fontface = "bold", nudge_y = 50) +
   scale_fill_viridis_d() +
   coord_cartesian(clip = "off", expand = FALSE) +
   coord_flip() +
   transition_states(Year, transition_length = 4, state_length = 8) +
   ease_aes("cubic-in-out") +
   labs(title = "Year {closest_state}") +
-  theme(text = element_text(family = 'Quicksand'),
-        legend.position = "none",
+  theme(legend.position = "none",
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank(),
         text = element_text(size=14),
-        plot.title = element_text(face = 'bold', size = 20)) +
+        plot.title = element_text(size = 35)) +
   ylim(0,1300) +
   xlab("")
 
 animate(p, nframes = 750, 
         fps = 10, 
-        end_pause = 50)
+        end_pause = 10)
 
  #text size
 # year 
