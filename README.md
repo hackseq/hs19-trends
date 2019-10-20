@@ -23,8 +23,8 @@ Graphic Visualization of trends in Bioinformatics
     * The keywords used for searching determined by terms in the EDAM ontology database and previous knowledge of the field. 
     * The keywords have been set up in [`raw-data/SearchTerms.csv`](https://github.com/hackseq/hs19-trends/blob/master/raw-data/SearchTerms.csv). We are working on optimizing the [`R/Fulltext_Workflow.Rmd`](https://github.com/hackseq/hs19-trends/blob/master/R/FullText_Workflow.Rmd) file to loop through this CSV. 
     * Due to access issues, we are only looking at papers in `plos` 
-1. Visualizing the data with ggplot and other R visualization packages 
-1. Potential data analysis if time permits 
+1. Visualization of [trends] (#Visualization) in the the data with ggplot and other R visualization packages 
+  
 
 ## Pre-requisites 
 These are the R Packages needed: 
@@ -59,7 +59,8 @@ To webscrape, run `database_parallel2.R` in the `R` directory after modifying th
 Three different types of information will be plotted 
 1. General summary plots of topic coverage over time and topic coverage based on journal.
 1. Analysis of bigrams (combinations of two words) used in publications to see common phrases and their relationships. Also looking to connect the authors and their subject matters using a sankey diagram. 
-1. Geographic mapping of insitutions involved in bioinformatic research. Dynamic heatmaps generated with colours based on the number of active insitutions in the area. Using plotly will be able to hover over points to indentify the insitution. Time permitting we will also add the preferred subject area for the insitutions. We will have global view, as well as specific USA and European maps due to the high number of results in those areas. The file being used to generate visualizations [`R/visualization_map.Rmd`](https://github.com/hackseq/hs19-trends/blob/master/R/visualization_map.Rmd). 
-  
+1. Geographic mapping of insitutions involved in bioinformatic research. The file being used to generate visualizations [`R/visualization_map.Rmd`](https://github.com/hackseq/hs19-trends/blob/master/R/visualization_map.Rmd)
+..1. Dynamic heatmaps generated with colours based on the number of active insitutions in the area. The maps provide global view, as well as specific USA and European maps due to the high number of results in those areas. Hovering over the countries/states shows the number of institutions and hovering over the points (where shown) identifies the institutions.
+..1. An interactive world map showing the most used keywords in each country. Hovering over the countries shows the topic names.
 
 
