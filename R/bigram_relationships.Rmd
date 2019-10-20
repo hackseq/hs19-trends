@@ -64,6 +64,9 @@ visualize_bigrams <- function(df_name, textfield){
       theme_void() + guides(size=FALSE) +
       title(main = {{title}})
     
+    ggsave(filename = paste0("../figures/", "bigrams_", str_to_lower(str_replace(topic_title, "\\s", "_")), ".png")
+           ,width = 12
+           ,height = 8)
 }
 ```
 
