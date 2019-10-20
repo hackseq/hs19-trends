@@ -110,6 +110,7 @@ pl <- ggplot() +
 
 ggplotly(pl,tooltip = "text")
 ```
+Hover over to see the number of institutions per countrys
 
 ## Europe
 
@@ -179,6 +180,8 @@ pl <- ggplot() +
 
 ggplotly(pl,tooltip="text")
 ```
+Hover over each country to see the number of institutions and over the points to see the institution name
+
 
 ## USA (institutions per state)
 
@@ -234,6 +237,7 @@ pl <- ggplot() +
 
 ggplotly(pl,tooltip = "text")
 ```
+Hover over each state to see the number of institutions and over the points to see the institution name
 
 # Most common topic per country
 
@@ -253,3 +257,5 @@ ggplotly(pl,tooltip = "text")
 
 
 ```
+
+Hover over to see the most common keyword used per country
