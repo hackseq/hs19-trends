@@ -2,35 +2,260 @@
 title: "visualization_map"
 author: "Raissa and Emma"
 date: "19/10/2019"
-output: html_document
+output: 
+  html_document:
+    toc: true
+
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE,warning=FALSE,message=FALSE)
 library(ggplot2)
 library(dplyr)
 library(plotly)
 library(here)
+library(ggmap)
+library(viridis)
+library(rgeos)
+library(maptools)
+library(maps)
+library(sf)
+library(readr)
+library(tidyverse)
+select <- dplyr::select
 ```
-
-## Make a bubble map with ggplot and plotly
 
 
 ```{r readData}
 
 data <- read_csv(here("data","affiliations_lat_long.csv"))
-data <- data %>% select(-X1) %>% distinct()
+data <- data %>% 
+       select(-X1) %>% distinct() %>%
+        drop_na() %>%
+        separate(latlong,c("lat","long"),sep=",") %>%
+        mutate_at(c("lat","long"),
+                  function(str) as.numeric(unlist(regmatches(str,gregexpr("(?>-)*[[:digit:]]+\\.*[[:digit:]]*",str, perl=TRUE))))
+                  )
+# Convert to simple feature object
+point_sf <- st_as_sf(data, coords = c("long", "lat"), crs = 4326)
 
 ```
 
-## Bubble plots
+# Number of institutions per country
 
-```{r pressure, echo=FALSE}
-# Libraries
+## World map
+```{r worldmapdatamanipulation}
 
-# Get the world polygon and extract UK
-library(maps)
-world <- map_data("world") 
+# Get world map data
+worldmap <- maps::map("world", fill = TRUE, plot = FALSE)
+
+# Convert world to sp class
+IDs <- sapply(strsplit(worldmap$names, ":"), "[", 1L)
+world_sp <- map2SpatialPolygons(worldmap, IDs = IDs, 
+                                proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+# Convert world_sp to simple feature object
+world_sf <- st_as_sf(world_sp)
+
+# Add country ID
+world_sf <- world_sf %>%
+  mutate(region = map_chr(1:length(world_sp@polygons), function(i){
+    world_sp@polygons[[i]]@ID
+  }))
+
+result <- st_within(point_sf, world_sf, sparse = FALSE)
+
+# Calculate the total count of each polygon
+# Store the result as a new column "Count" in world_sf
+world_sf <- world_sf %>%
+  mutate(Count = apply(result, 2, sum))
+
+# most popular topic per country
+resultWithTopic <- cbind(point_sf$topic,result)
+topicSummary <- resultWithTopic %>% as.data.frame(stringsAsFactors=FALSE) %>% 
+        group_by(V1) %>% 
+        dplyr::summarise_all(function(x)sum(x != "FALSE"))
+names(topicSummary) <- c("topic",world_sf$region)   
+
+topicSummary <- topicSummary %>% gather(region,count,-topic)
+topicRanks <- topicSummary %>% 
+      filter(count != 0) %>%
+        group_by(region) %>% 
+      summarise(topicMax=list(topic[count==max(count)])) %>%
+      rowwise() %>%
+      mutate(topicDisplay=ifelse(length(unlist(topicMax))>1,
+                                 "multiple",topicMax),
+             text = paste(unique(unlist(topicMax)),collapse = ", "))
+
+# Convert world_sf to a data frame world_df 
+world_df <- world_sf
+st_geometry(world_df) <- NULL
+
+# Get world data frame
+world_data <- map_data("world")
+
+# Merge world_data and world_df and topicRanks
+world_data2 <- world_data %>%
+  left_join(world_df, by = c("region"))%>%
+  left_join(topicRanks, by=c("region"))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r worldmap}
+pl <- ggplot() + 
+  geom_polygon(data = world_data2, aes(x = long, y = lat, group = group, fill = log(Count),text=Count)) +
+  #geom_point(data=data,aes(x = long, y = lat),alpha=0.5,size=0.5,colour="grey")+
+  coord_fixed(1.3)+
+  scale_fill_viridis()+
+  theme_void()
+
+ggplotly(pl,tooltip = "text")
+```
+Hover over to see the number of institutions per countrys
+
+## Europe
+
+```{r EU Data manipulation}
+
+# Get world map data
+worldmap <- maps::map("world", fill = TRUE, plot = FALSE)
+
+# Convert world to sp class
+IDs <- sapply(strsplit(worldmap$names, ":"), "[", 1L)
+world_sp <- map2SpatialPolygons(worldmap, IDs = IDs, 
+                                proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+# Convert world_sp to simple feature object
+world_sf <- st_as_sf(world_sp)
+
+# Add country ID
+world_sf <- world_sf %>%
+  mutate(region = map_chr(1:length(world_sp), function(i){
+    world_sp@polygons[[i]]@ID
+  }))
+
+###get only europe
+filt_bbox <- sf::st_bbox(c(xmin = -9, 
+                           ymin = 36, 
+                           xmax = 42.5, 
+                           ymax = 70.1), 
+                         crs = st_crs(4326)) %>% 
+  sf::st_as_sfc(.)
+
+
+find_data <- sf::st_within(world_sf, filt_bbox)
+#> although coordinates are longitude/latitude, st_within assumes that they are planar
+europe_sf <- world_sf[which(lengths(find_data) != 0), ]
+
+europe_result <- st_within(point_sf, europe_sf, sparse = FALSE)
+
+# Calculate the total count of each polygon
+# Store the result as a new column "Count" in world_sf
+europe_sf <- europe_sf %>%
+  mutate(Count = apply(europe_result, 2, sum))
+
+# Convert world_sf to a data frame world_df 
+europe_df <- europe_sf
+st_geometry(europe_df) <- NULL
+
+# Get world data frame
+world_data <- map_data("world")
+
+# Merge world_data and world_df
+europe_data <- europe_df %>%
+  left_join(world_data, by = c("region"))
+
+ind <- sf::st_intersects(point_sf, europe_sf)
+points_europe<-  point_sf[which(lengths(ind) != 0), ]
+points_europe <- cbind(points_europe,st_coordinates(points_europe))
+
+```
+
+```{r EUmap}
+pl <- ggplot() + 
+  geom_polygon(data = europe_data, aes(x = long, y = lat, group = group, fill = log(Count),text=paste(region,Count, sep=";"))) +
+  geom_point(data=points_europe,aes(x=X,y=Y,text=str_wrap(affiliation,50)),alpha=0.5,size=0.5,colour="grey")+
+  coord_fixed(1.3)+
+  scale_fill_viridis()+
+  theme_void()
+
+ggplotly(pl,tooltip="text")
+```
+Hover over each country to see the number of institutions and over the points to see the institution name
+
+
+## USA (institutions per state)
+
+
+```{r USdataManipulation}
+statemap <- maps::map("state", fill = TRUE, plot = FALSE)
+
+# Convert world to sp class
+IDs <- sapply(strsplit(statemap$names, ":"), "[", 1L)
+state_sp <- map2SpatialPolygons(statemap, IDs = IDs, 
+                                proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+# Convert world_sp to simple feature object
+state_sf <- st_as_sf(state_sp)
+
+# Add country ID
+state_sf <- state_sf %>%
+  mutate(region = map_chr(1:length(state_sp@polygons), function(i){
+    state_sp@polygons[[i]]@ID
+  }))
+
+state_result <- st_within(point_sf, state_sf, sparse = FALSE)
+
+# Calculate the total count of each polygon
+# Store the result as a new column "Count" in world_sf
+state_sf <- state_sf %>%
+  mutate(Count = apply(state_result, 2, sum))
+
+# Convert world_sf to a data frame world_df 
+state_df <- state_sf
+st_geometry(state_df) <- NULL
+
+# Get world data frame
+state_data <- map_data("state")
+
+# Merge world_data and world_df
+state_data2 <- state_data %>%
+  left_join(state_df, by = c("region"))
+
+points_usa_index <- sf::st_intersects(point_sf, state_sf)
+points_usa <-  point_sf[which(lengths(points_usa_index) != 0), ]
+points_usa <- cbind(points_usa,st_coordinates(points_usa))
+
+```
+
+```{r usamap}
+pl <- ggplot() + 
+  geom_polygon(data = state_data2, aes(x = long, y = lat, group = group, fill = log(Count),text=paste(region,Count, sep=";"))) +
+  geom_point(data=points_usa,aes(x=X,y=Y,text=str_wrap(affiliation,50)),alpha=0.5,size=0.5,colour="grey")+
+  coord_fixed(1.3)+
+  scale_fill_viridis()+
+  theme_void()
+
+ggplotly(pl,tooltip = "text")
+```
+Hover over each state to see the number of institutions and over the points to see the institution name
+
+# Most common topic per country
+
+```{r mostCommonTopicPerCountry}
+
+naPoly <- world_data2 %>% filter(is.na(topicDisplay))
+pl <- ggplot() + 
+  geom_polygon(data = world_data2, aes(x = long, y = lat, group = group, fill = topicDisplay,text=text)) +
+  geom_polygon(data=naPoly,aes(x=long,y=lat,group=group),fill="grey",color="lightgrey")+
+  #geom_point(data=data,aes(x = long, y = lat),alpha=0.5,size=0.5,colour="grey")+
+  coord_fixed(1.3)+
+  scale_fill_viridis(discrete = T) +
+  theme_void()+
+  theme(legend.position = "none")
+
+ggplotly(pl,tooltip = "text")
+
+
+```
+
+Hover over to see the most common keyword used per country
