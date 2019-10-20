@@ -69,6 +69,9 @@ visualize_bigrams <- function(df_name, textfield, topic_title){
       labs(title = quo_name(topic_title)) +
       theme(plot.title = element_text(size = 26, face = "bold"))
     
+    ggsave(filename = paste0("../figures/", "bigrams_", str_to_lower(str_replace(topic_title, "\\s", "_")), ".png")
+           ,width = 12
+           ,height = 8)
 }
 ```
 
