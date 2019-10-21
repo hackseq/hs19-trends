@@ -73,7 +73,9 @@ for (yr in 2003:2019) {
 }
 ```
 
-The data is limited to the establishment of PLoS in 2003
+- Papers were pulled from PLoS using Fulltext
+- The data is limited to when PLoS was established in 2003 to the Present
+- Search terms were identified based on previous knowledge
 ```{r racing bars animate, echo=TRUE}
 p <- ordered_df %>% 
   ggplot(aes(ordering, group = topic))+
@@ -89,7 +91,7 @@ p <- ordered_df %>%
   transition_states(Year, transition_length = 8, state_length = 4, wrap = FALSE) +
   ease_aes("cubic-in-out") +
 #aesthetics
-  labs(subtitle = "Trends in sequening methods",title = "Year {closest_state}", y = "cumulative total papers") +
+  labs(subtitle = "Trends in sequencing methods",title = "Year {closest_state}", y = "cumulative total papers") +
   theme(plot.background = element_blank(),
         legend.position = "none",
         axis.ticks.y = element_blank(),
@@ -101,7 +103,11 @@ p <- ordered_df %>%
 
 #rendering the animation
 animate(p, nframes = 750, 
-        fps = 20, 
+        fps = 25, 
         end_pause = 10)
+```
+
+```{r, include=FALSE}
+anim_save("../figures/sequencing_race.gif", animation = last_animation(), width = 12, height = 8)
 ```
 
