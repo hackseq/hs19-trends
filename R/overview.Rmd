@@ -5,16 +5,15 @@ date: "20/10/2019"
 output: 
   html_document:
     toc: true
-    theme: paper
 ---
 
 ```{r setup, include=FALSE, warning = FALSE, message=FALSE}
 knitr::opts_chunk$set(echo = TRUE, error = FALSE, message = FALSE, warning = FALSE, fig.width=12, fig.height=8)
 ```
-
+<!--
 ## Set Up
-Load all the necessary packages:
-```{r load, warning= FALSE, message = FALSE}
+Load all the necessary packages:-->
+```{r load, warning= FALSE, message = FALSE, echo = FALSE}
 library(future)
 library(fulltext)
 library(pubchunks)
@@ -31,20 +30,21 @@ library(stringr)
 
 ## Overview of Hits by Topic
 
-Load all the search terms:
-```{r}
+<!--Load all the search terms:-->
+Looking at this overview, there is an even distribution of databases in all topics.
+```{r, echo = FALSE}
 searchTerms <- read_csv(here::here("/raw-data/SearchTerms.csv"))
 searchTerms$Term %<>% as.character()
 # searchTerms <- searchTerms %>% filter(Topic=="Sequence Alignment")
 ```
 
-Set API keys:
+<!--Set API keys: -->
 ```{r API keys, echo = FALSE}
 Sys.setenv(ELSEVIER_SCOPUS_KEY = '3da3a9477a6e0a7fefc0bbfb49f288f5', SPRINGER_KEY = 'dc293398c185c33d930865ae1fd6eae3', ENTREZ_KEY = "1621b309cd4dab23f28c432d4e7baa76d909" )
 ```
 
-Search for all search terms across all databases:
-```{r overview}
+<!-- Search for all search terms across all databases:-->
+```{r overview, echo = FALSE}
 resFound <- NULL
 
 databaseList <- ft_search_ls()
@@ -87,9 +87,10 @@ overview <- resFound %>%
         axis.text = element_text(size=12)
         ) +
   scale_y_continuous(label = scales::comma_format()) +
-  labs(title = "Topic Overview Across Databases", y = "# Papers Found", x = "Topic", fill = "Database")
+  labs(title = "", y = "# Papers Found", x = "Topic", fill = "Database")
 ```
 
+## Topic Overview
 ```{r, echo = FALSE}
 print(overview)
 ```
@@ -98,32 +99,109 @@ print(overview)
 ggsave(here::here("figures", "overview.pdf"), height = 8, width =12, device = "pdf")
 ```
 
-## Breakdown of Topic By Search Term
+## Breakdown of Topics By Search Term
 
-Plot the specific breakdowns in each topic:
-```{r overview topic}
+Here we have broken down each topic further by search term, across all databases.
+<!-- Plot the specific breakdowns in each topic: -->
+```{r overview topic, echo = FALSE}
+plots <- list()
+i <- 1
 for (specific_topic in unique(searchTerms$Topic)) {
-print(resFound %>%
-  filter(topic == specific_topic) %>%
-  mutate(searchTerm = str_replace_all(searchTerm, " ", "\n")) %>%
-  group_by(searchTerm, db) %>%
-  summarize(sum=sum(found)) %>%
-  ggplot(aes(x = searchTerm, y = sum)) +
-  geom_col(aes(fill = db)) +
-  labs(title = specific_topic, y = "# Papers Found", x = "Search Terms", fill = "Database") +
-  theme(text = element_text(size = 20),
-        axis.title = element_text(size =18),
-        axis.text = element_text(size=12),
-       # axis.text.x = element_text(angle=20)
-        ) +
-    scale_y_continuous(label = scales::comma_format()))
+  p <- resFound %>%
+    filter(topic == specific_topic) %>%
+    mutate(searchTerm = str_replace_all(searchTerm, " ", "\n")) %>%
+    group_by(searchTerm, db) %>%
+    summarize(sum = sum(found)) %>%
+    ggplot(aes(x = searchTerm, y = sum)) +
+    geom_col(aes(fill = db)) +
+    labs(
+      title = "",
+      y = "# Papers Found",
+      x = "Search Terms",
+      fill = "Database"
+    ) +
+    theme(
+      text = element_text(size = 20),
+      axis.title = element_text(size = 18),
+      axis.text = element_text(size = 12),
+      # axis.text.x = element_text(angle=20)
+    ) +
+    scale_y_continuous(label = scales::comma_format())
+  
+  plots[[i]] <- p
+  i <- i + 1
 }
 ```
 
-### Breakdown of **Sequencing** By Search Term
+### Sequencing
+```{r, echo = FALSE}
+print(plots[[1]])
+```
 
-Sequencing (specific):
-```{r}
+### Sequence Alignment
+
+```{r, echo = FALSE}
+print(plots[[2]])
+```
+
+### Variant Calling
+
+```{r, echo = FALSE}
+print(plots[[3]])
+```
+
+### Assembly
+
+```{r, echo = FALSE}
+print(plots[[4]])
+```
+
+### Databases
+
+```{r, echo = FALSE}
+print(plots[[5]])
+```
+
+### Genome Annotation
+
+```{r, echo = FALSE}
+print(plots[[6]])
+```
+
+### Gene Expression
+
+```{r, echo = FALSE}
+print(plots[[7]])
+```
+
+### Phylogenetics
+
+```{r, echo = FALSE}
+print(plots[[8]])
+```
+
+### Structural Prediction
+
+```{r, echo = FALSE}
+print(plots[[9]])
+```
+
+### Epigenetics
+
+```{r, echo = FALSE}
+print(plots[[10]])
+```
+
+### Metagenomics
+```{r, echo = FALSE}
+print(plots[[11]])
+```
+
+## Breakdown of **Sequencing** By Search Term
+
+Here we have broken down the topic of Sequencing further into even more specific search terms:
+
+```{r, echo = FALSE}
 specific_topic <- "Sequencing"
 resFound <- NULL
 
@@ -167,7 +245,7 @@ sequencing_plot <- resFound %>%
   summarize(sum=sum(found)) %>%
   ggplot(aes(x = searchTerm, y = sum)) +
   geom_col(aes(fill = db)) +
-  labs(title = specific_topic, y = "# Papers Found", x = "Search Terms", fill = "Database") +
+  labs(title = "", y = "# Papers Found", x = "Search Terms", fill = "Database") +
   theme(text = element_text(size = 20),
         axis.title = element_text(size =18),
         axis.text = element_text(size=12),
@@ -185,10 +263,10 @@ ggsave(filename = here::here("figures", "sequencing.pdf"), plot = sequencing_plo
 ```
 
 
-### Breakdown of **Assembly** By Search Term
+## Breakdown of **Assembly** By Search Term
 
-Assembly (specific):
-```{r}
+Here we have broken down the topic of Assembly further into even more specific search terms.
+```{r, echo = FALSE}
 specific_topic <- "Assembly"
 resFound <- NULL
 
@@ -232,7 +310,7 @@ assembly_plot <- resFound %>%
   summarize(sum=sum(found)) %>%
   ggplot(aes(x = fct_rev(fct_relevel(factor(searchTerm), levels = c("short read assembly", "long read assembly", "linked read assembly", "hybrid assembly", "scaffolding", "polishing", "single cell assembly"))), y = sum)) +
   geom_col(aes(fill = db)) +
-  labs(title = specific_topic, y = "# Papers Found", x = "Search Terms", fill = "Database") +
+  labs(title = "", y = "# Papers Found", x = "Search Terms", fill = "Database") +
   theme(text = element_text(size = 20),
         axis.title = element_text(size =18),
         axis.text = element_text(size=12),
@@ -250,9 +328,11 @@ ggsave(filename = here::here("figures", "assembly.pdf"), plot = assembly_plot, w
 ```
 
 
-### Breakdown of **Sequence Alignment** By Search Term
-Alignment (specific):
-```{r}
+## Breakdown of **Sequence Alignment** By Search Term
+
+Here we have broken down the topic of Sequence Alignment further into even more specific search terms:
+
+```{r, echo = FALSE}
 specific_topic <- "Alignment"
 resFound <- NULL
 
@@ -293,7 +373,7 @@ alignment_plot <- resFound %>%
   summarize(sum=sum(found)) %>%
   ggplot(aes(x = searchTerm, y = sum)) +
   geom_col(aes(fill = db)) +
-  labs(title = specific_topic, y = "# Papers Found", x = "Search Terms", fill = "Database") +
+  labs(title = "", y = "# Papers Found", x = "Search Terms", fill = "Database") +
   theme(text = element_text(size = 20),
         axis.title = element_text(size =18),
         axis.text = element_text(size=12),

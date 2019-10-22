@@ -1,6 +1,6 @@
 ---
-title: "visualization_map"
-author: "Raissa and Emma"
+title: "Visualization Maps"
+author: "Raissa Philibert and Emma Garlock"
 date: "19/10/2019"
 output: 
   html_document:

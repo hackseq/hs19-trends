@@ -1,8 +1,10 @@
 ---
 title: "Bigram Relationships"
 author: "Shannon Lo"
-date: "19 Oct 2019"
-output: html_document
+date: "19/10/2019"
+output: 
+  html_document:
+    toc: true
 ---
 
 ```{r Setup, include=FALSE}
@@ -22,6 +24,7 @@ library(tidygraph)
 ```
 
 The following function(s) are defined below:
+
   * **visualize_bigrams**: extracts bigrams from a text field, calculates frequency of bigrams, and creates a bigram plot to visualize relationships between words
     + *df_name*: name of dataframe that contains the text field of interest
     + *textfield*: name of text field (ie. column name)
@@ -78,6 +81,7 @@ visualize_bigrams <- function(df_name, textfield, topic_title){
 ```
 
 Read in the following data sources:
+
   * **Web scraped data**: this CSV contains information on journals and was created using *database_parallel2.R*
   * **Topics and search terms**: this CSV contains 10 topics and 3 search terms for each topic
 ```{r Read Data, results='hide'}
@@ -129,17 +133,64 @@ df_varcall <- df %>%
 ```
 
 Create bigram plots to visualize the relationships between two words. The darker lines represent higher frequency of occurrence.
-```{r Create Bigram Plots}
-#visualize_bigrams(df,abstract, "All Topics")
-visualize_bigrams(df_assembly, abstract, "Assembly")
-visualize_bigrams(df_databases, abstract, "Databases")
-visualize_bigrams(df_epigenetics, abstract, "Epigenetics")
-visualize_bigrams(df_geneexp, abstract, "Gene Expression")
-visualize_bigrams(df_genomeann, abstract, "Genome Annotation")
-visualize_bigrams(df_phylogenetics, abstract, "Phylogenetics")
-visualize_bigrams(df_seqal, abstract, "Sequence Alignment")
-visualize_bigrams(df_sequence, abstract, "Sequencing")
-visualize_bigrams(df_strucpred, abstract, "Structural Prediction")
-visualize_bigrams(df_varcall, abstract, "Variant Calling")
+
+## Assembly
+
+```{r Create Bigram Assembly}
+# visualize_bigrams(df,abstract, "All Topics")
+visualize_bigrams(df_assembly, abstract, "")
 ```
 
+## Databases
+
+```{r Create Bigram Database}
+visualize_bigrams(df_databases, abstract, "")
+```
+
+## Epigenetics
+
+```{r Create Bigram Epigenetics}
+visualize_bigrams(df_epigenetics, abstract, "")
+```
+
+## Gene Expression
+
+```{r Create Bigram Gene Expression}
+visualize_bigrams(df_geneexp, abstract, "")
+```
+
+## Genome Annotation
+
+```{r Create Bigram Genome Annotation}
+visualize_bigrams(df_genomeann, abstract, "")
+```
+
+## Phylogenetics
+
+```{r Create Bigram Phylogenetics}
+visualize_bigrams(df_phylogenetics, abstract, "")
+```
+
+## Sequence Alignment
+
+```{r Create Bigram Alignment}
+visualize_bigrams(df_seqal, abstract, "")
+```
+
+## Sequencing
+
+```{r Create Bigram Sequencing}
+visualize_bigrams(df_sequence, abstract, "")
+```
+
+## Structural Prediction
+
+```{r Create Bigram Structural Prediction}
+visualize_bigrams(df_strucpred, abstract, "")
+```
+
+## Variant Calling
+
+```{r Create Bigram Variant Calling}
+visualize_bigrams(df_varcall, abstract, "")
+```
