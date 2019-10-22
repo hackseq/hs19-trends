@@ -3,7 +3,7 @@
 1. [Overview](https://dy-lin.github.io/hs19-trends/R/overview.html)
 1. [General Visualizations](https://dy-lin.github.io/hs19-trends/R/general_vis.html)
 1. [Visualization Maps](https://dy-lin.github.io/hs19-trends/R/visualization_map.html)
-1. [Bi-gram Relationships](https://dy-lin.github.io/hs19-trends/R/bigram_relationships.html)
+1. [Bigram Relationships](https://dy-lin.github.io/hs19-trends/R/bigram_relationships.html)
 1. [Sankey Diagrams](https://dy-lin.github.io/hs19-trends/R/visualization_sankey.html)
 1. [Text Rank Analysis](https://dy-lin.github.io/hs19-trends/R/TextRankAnalysis.html)
 
