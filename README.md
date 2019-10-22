@@ -5,7 +5,7 @@
 1. [Visualization Maps](https://dy-lin.github.io/hs19-trends/R/visualization_map.html)
 1. [Bigram Relationships](https://dy-lin.github.io/hs19-trends/R/bigram_relationships.html)
 1. [Sankey Diagrams](https://dy-lin.github.io/hs19-trends/R/visualization_sankey.html)
-1. [Text Rank Analysis](https://dy-lin.github.io/hs19-trends/R/TextRankAnalysis.html)
+<!--1. [Text Rank Analysis](https://dy-lin.github.io/hs19-trends/R/TextRankAnalysis.html)-->
 
 ## Project Goals
 Graphic Visualization of trends in Bioinformatics
