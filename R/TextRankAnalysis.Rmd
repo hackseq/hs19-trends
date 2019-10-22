@@ -1,8 +1,10 @@
 ---
 title: "TextRank"
 author: "Lucia Darrow"
-date: "October 19, 2019"
-output: html_document
+date: "19/10/2019"
+output: 
+  html_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -14,12 +16,15 @@ knitr::opts_chunk$set(echo = TRUE)
 library(data.table)
 library(textrank)
 library(udpipe)
+library(tidyverse)
+library(stringr)
+library(magrittr)
 ```
 
 
 ```{r import}
 
-termResults <- fread("./data/NGS.csv")
+termResults <- fread("../data/NGS.csv")
 termResults2019 <- termResults %>% filter(Year == 2019)
 
 ```
